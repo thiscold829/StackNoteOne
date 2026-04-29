@@ -8,11 +8,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL,GRAD@100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css"/>
+<script src="config.js"></script>
 <style>
 :root {
   --ink: #111827; --ink-soft: #475569; --ink-mute: #94a3b8;
   --bg-gradient: radial-gradient(1200px 800px at 50% 0%, #ffffff 0%, #f1f5f9 100%);
-  --pool-inner: rgba(226, 232, 240, 0.45); /* 초기 디자인의 유체 질감 */
+  --pool-inner: rgba(226, 232, 240, 0.45);
 }
 html, body { height: 100%; overflow: hidden; }
 body {
@@ -30,7 +31,6 @@ body::before {
 .nav-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s; text-decoration: none; }
 .nav-btn:hover { background: rgba(0,0,0,0.05); color: var(--ink); }
 
-/* Manual Save Button */
 .btn-save-manual {
   display: flex; align-items: center; gap: 8px; background: var(--ink); color: #fff;
   padding: 8px 18px; border-radius: 99px; font-size: 12px; font-weight: 800;
@@ -38,16 +38,16 @@ body::before {
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
 }
 .btn-save-manual:hover { transform: translateY(-1px); background: #334155; }
-.btn-save-manual.syncing { background: #3b82f6; }
+.btn-save-manual.syncing { background: #3b82f6; cursor: wait; }
 
-/* Layout */
-.workspace { flex: 1; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; width: 100%; padding: 24px 40px 40px; }
+/* [수술 1] Workspace: min-height: 0 을 주어 자식 요소의 스크롤을 활성화 */
+.workspace { flex: 1; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; width: 100%; padding: 24px 40px 40px; min-height: 0; }
 
-/* Input Dock (Project -> Content -> Date) */
+/* Input Dock */
 .input-dock {
   background: #ffffff; border-radius: 20px; padding: 10px 14px; margin-bottom: 24px;
   box-shadow: 0 10px 30px -10px rgba(15,23,42,0.08), inset 0 1px 0 #fff;
-  border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; z-index: 50; position: relative;
+  border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; z-index: 50; flex-shrink: 0;
 }
 .inp-proj { width: 110px; background: #f1f5f9; border-radius: 12px; border: 1px solid transparent; padding: 8px 10px; font-size: 13px; font-weight: 800; color: var(--ink); outline: none; text-align: center; }
 .inp-proj:focus { background: #fff; border-color: var(--ink-mute); }
@@ -64,12 +64,13 @@ body::before {
 }
 .btn-add:hover { background: #334155; transform: scale(1.05); }
 
-/* Tabs & List Pool (Carved Pool Design) */
-.tabs { display: flex; gap: 24px; margin-bottom: 16px; padding-left: 12px; }
+/* Tabs & List Pool */
+.tabs { display: flex; gap: 24px; margin-bottom: 16px; padding-left: 12px; flex-shrink: 0; }
 .tab { font-size: 14px; font-weight: 800; color: var(--ink-mute); cursor: pointer; position: relative; transition: 0.2s; }
 .tab.active { color: var(--ink); }
 .tab.active::after { content: ''; position: absolute; bottom: -8px; left: 0; width: 100%; height: 2px; background: var(--ink); }
 
+/* [수술 1] List Pool: overflow-y: auto 가 정상 작동하도록 설정 */
 .list-pool { 
   flex: 1; background: var(--pool-inner); border-radius: 32px; padding: 28px; overflow-y: auto; 
   box-shadow: inset 0 12px 24px -8px rgba(15,23,42,0.12), inset 0 2px 4px rgba(0,0,0,0.02);
@@ -77,7 +78,7 @@ body::before {
 }
 .list-pool::-webkit-scrollbar { display: none; }
 
-/* Task Card (Initial Liquid Style) */
+/* Task Card */
 .task-card {
   background: #ffffff; border-radius: 16px; padding: 14px 20px; margin-bottom: 10px;
   display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 10px -2px rgba(15,23,42,0.04);
@@ -90,7 +91,6 @@ body::before {
 .task-txt { flex: 1; font-size: 14px; font-weight: 700; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .task-card.done .task-txt { text-decoration: line-through; color: var(--ink-mute); opacity: 0.6; }
 
-/* Group Header */
 .group-header { display: flex; align-items: center; gap: 12px; margin: 24px 0 12px 8px; }
 .group-label { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 900; color: var(--ink-mute); letter-spacing: 0.2em; text-transform: uppercase; }
 .group-line { flex: 1; height: 1px; background: rgba(0,0,0,0.05); }
@@ -109,19 +109,19 @@ body::before {
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-btn"><span class="ms">arrow_back</span> HOME</a>
+  <a href="index.html" class="nav-btn"><span class="ms">arrow_back</span> 허브로 돌아가기</a>
   <button class="btn-save-manual" id="saveBtn" onclick="forceManualSave()">
     <span class="ms text-[18px]" id="syncIcon">cloud_sync</span>
-    <span id="syncText">DB Sync</span>
+    <span id="syncText">데이터베이스 동기화</span>
   </button>
 </nav>
 
 <main class="workspace">
   <div class="input-dock">
-    <input type="text" id="inProj" list="projList" class="inp-proj" placeholder="사업" autocomplete="off" tabindex="1">
+    <input type="text" id="inProj" list="projList" class="inp-proj" placeholder="사업 약어" autocomplete="off" tabindex="1">
     <datalist id="projList"></datalist>
     
-    <input type="text" id="inTask" class="inp-task" placeholder="어떤 업무를 추가할까요?" onkeypress="if(event.key==='Enter') addTodo()" tabindex="2">
+    <input type="text" id="inTask" class="inp-task" placeholder="오늘 어떤 업무를 처리할까요?" onkeypress="if(event.key==='Enter') addTodo()" tabindex="2">
     
     <div class="date-wrap">
       <span class="ms text-slate-400 text-[20px] cursor-pointer" onclick="document.getElementById('inDate').showPicker()">calendar_month</span>
@@ -153,7 +153,7 @@ body::before {
       <input type="date" id="edDate" class="flex-1" style="font-family:'Space Grotesk'">
     </div>
     <input type="text" id="edTask" placeholder="무엇을 해야 하나요?" class="font-bold text-[16px]">
-    <textarea id="edMemo" rows="4" placeholder="필요한 상세 내용이 있으면 작성해 주세요"></textarea>
+    <textarea id="edMemo" rows="4" placeholder="상세한 메모를 남겨주세요..."></textarea>
     <div class="flex justify-between items-center mt-2">
       <button onclick="deleteTodo()" class="text-rose-500 font-bold text-[13px] hover:bg-rose-50 px-4 py-2 rounded-lg">삭제</button>
       <button onclick="saveEdit()" class="bg-slate-900 text-white font-bold text-[13px] px-8 py-2 rounded-xl">업데이트</button>
@@ -161,20 +161,23 @@ body::before {
   </div>
 </div>
 
+<div id="toast"></div>
+
 <form id="hidden_form" target="hidden_iframe" method="POST" style="display:none;"><input type="hidden" name="payload" id="payload_input"></form>
 <iframe name="hidden_iframe" style="display:none;" onload="if(window.isSaving) onSaveSuccess();"></iframe>
 
 <script>
-const SHEET_ID = '16izs14p3VvDfojdBR2Q3Qwty6wHZiRqNbnQ8PxS9eOY';
-const API_URL = 'https://script.google.com/macros/s/AKfycbz6QmihPORS0zp7Z9KPcHfAOVqGYlUVAl982rPZEW3sUcBtpe8OJDMxwrT67pA4ogO9/exec';
+// config.js 연동
+const S_ID = typeof CONFIG !== 'undefined' ? CONFIG.SHEET_ID : '16izs14p3VvDfojdBR2Q3Qwty6wHZiRqNbnQ8PxS9eOY';
+const A_URL = typeof CONFIG !== 'undefined' ? CONFIG.API_URL : 'https://script.google.com/macros/s/AKfycbz6QmihPORS0zp7Z9KPcHfAOVqGYlUVAl982rPZEW3sUcBtpe8OJDMxwrT67pA4ogO9/exec';
 
 let projects = [], todos = [], currentTab = 'active', autoSaveTimer;
 
 window.onload = async () => {
   try {
     const [pRes, tRes] = await Promise.all([
-      fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=projects`),
-      fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=todos`)
+      fetch(`https://docs.google.com/spreadsheets/d/${S_ID}/gviz/tq?tqx=out:csv&sheet=projects`),
+      fetch(`https://docs.google.com/spreadsheets/d/${S_ID}/gviz/tq?tqx=out:csv&sheet=todos`)
     ]);
     projects = parseCSV(await pRes.text()) || [];
     todos = parseCSV(await tRes.text()) || [];
@@ -226,12 +229,24 @@ function forceManualSave() {
 
 function commitToCloud() {
   if(window.isSaving) return;
-  const payload = { action: 'write', sheetName: 'todos', data: todos };
+  
+  // [수술 2] 순서 재할당 (DB 증발 버그 원천 차단)
+  const safeTodos = todos.map((t, i) => ({
+    id: t.id || '',
+    task: t.task || '',
+    project_id: t.project_id || '',
+    deadline: t.deadline || '',
+    is_done: t.is_done || 'FALSE',
+    memo: t.memo || '',
+    order: i + 1
+  }));
+
+  const payload = { action: 'write', sheetName: 'todos', data: safeTodos };
   document.getElementById('payload_input').value = JSON.stringify(payload);
+  
   window.isSaving = true;
-  const form = document.getElementById('hidden_form');
-  form.action = API_URL;
-  form.submit();
+  document.getElementById('hidden_form').action = A_URL;
+  document.getElementById('hidden_form').submit();
 }
 
 function onSaveSuccess() {
@@ -244,17 +259,20 @@ function renderTodos() {
   const today = new Date().toISOString().split('T')[0];
   let filtered = todos.filter(t => currentTab === 'active' ? String(t.is_done).toUpperCase() !== 'TRUE' : String(t.is_done).toUpperCase() === 'TRUE');
   
-  if(!filtered.length) { pool.innerHTML = `<div class="text-center text-slate-400 font-bold mt-12 opacity-60">리스트가 비어 있습니다.</div>`; return; }
+  if(!filtered.length) { pool.innerHTML = `<div class="text-center text-slate-400 font-bold mt-12 opacity-60">항목이 없습니다.</div>`; return; }
 
   const grouped = {};
-  filtered.forEach(t => { 
-    const pid = t.project_id || 'GENERAL';
-    if(!grouped[pid]) grouped[pid] = [];
-    grouped[pid].push(t);
-  });
+  filtered.forEach(t => { const pid = t.project_id || 'GENERAL'; if(!grouped[pid]) grouped[pid] = []; grouped[pid].push(t); });
 
   let html = '';
-  Object.keys(grouped).forEach(k => {
+  // 그룹 정렬 (project order 기반)
+  const sortedKeys = Object.keys(grouped).sort((a,b) => {
+    let pA = projects.find(p=>p.short_name === a), pB = projects.find(p=>p.short_name === b);
+    return (pA ? Number(pA.order) : 999) - (pB ? Number(pB.order) : 999);
+  });
+
+  sortedKeys.forEach(k => {
+    // 항목별 정렬 (가까운 날짜 순)
     grouped[k].sort((a,b) => (a.deadline||'9999').localeCompare(b.deadline||'9999'));
     html += `<div class="group-header"><span class="group-label">${k}</span><div class="group-line"></div></div>`;
     grouped[k].forEach(t => {
@@ -271,53 +289,62 @@ function renderTodos() {
   pool.innerHTML = html;
 }
 
-function switchTab(t) {
-  currentTab = t;
-  document.getElementById('tabActive').classList.toggle('active', t==='active');
-  document.getElementById('tabDone').classList.toggle('active', t==='done');
-  renderTodos();
-}
+function switchTab(t) { currentTab = t; document.getElementById('tabActive').classList.toggle('active', t==='active'); document.getElementById('tabDone').classList.toggle('active', t==='done'); renderTodos(); }
 
 function addTodo() {
-  const t = document.getElementById('inTask').value.trim();
-  if(!t) return;
+  const t = document.getElementById('inTask').value.trim(); if(!t) return;
   todos.push({
-    id:'t_'+Date.now(), project_id:document.getElementById('inProj').value.trim(),
-    task:t, deadline:document.getElementById('inDate').value,
-    is_done:'FALSE', memo:'', order: todos.length+1
+    id: 't_' + Date.now(), 
+    project_id: document.getElementById('inProj').value.trim(), 
+    task: t, 
+    deadline: document.getElementById('inDate').value, 
+    is_done: 'FALSE', 
+    memo: '', 
+    order: todos.length + 1
   });
   document.getElementById('inTask').value=''; renderTodos(); triggerAutoSave(true);
 }
 
-function toggleDone(id) {
-  const idx = todos.findIndex(x=>x.id===id);
-  todos[idx].is_done = String(todos[idx].is_done).toUpperCase()==='TRUE'?'FALSE':'TRUE';
-  renderTodos(); triggerAutoSave(true);
+function toggleDone(id) { 
+  const idx = todos.findIndex(x=>x.id===id); 
+  todos[idx].is_done = String(todos[idx].is_done).toUpperCase()==='TRUE' ? 'FALSE' : 'TRUE'; 
+  renderTodos(); triggerAutoSave(true); 
 }
 
+/* [수술 3] 메모 파싱 - 화면에 뿌릴 땐 줄바꿈으로 복원 */
 function openEdit(id) {
   const t = todos.find(x=>x.id===id);
-  document.getElementById('edId').value=t.id; document.getElementById('edProj').value=t.project_id;
-  document.getElementById('edTask').value=t.task; document.getElementById('edDate').value=t.deadline;
-  document.getElementById('edMemo').value=(t.memo||'').replace(/\\n/g,'\n');
+  document.getElementById('edId').value = t.id; 
+  document.getElementById('edProj').value = t.project_id || ''; 
+  document.getElementById('edTask').value = t.task; 
+  document.getElementById('edDate').value = t.deadline || ''; 
+  document.getElementById('edMemo').value = (t.memo || '').replace(/↵/g, '\n'); // CSV 호환 기호(↵)를 줄바꿈으로 변경
   document.getElementById('editModal').classList.add('active');
 }
+
 function closeEdit() { document.getElementById('editModal').classList.remove('active'); }
 
+/* [수술 2 & 3] 데이터 교체 시 객체 온전성 유지 및 특수문자 치환 */
 function saveEdit() {
-  const id = document.getElementById('edId').value;
+  const id = document.getElementById('edId').value; 
   const idx = todos.findIndex(x=>x.id===id);
-  todos[idx].project_id = document.getElementById('edProj').value.trim();
-  todos[idx].task = document.getElementById('edTask').value;
-  todos[idx].deadline = document.getElementById('edDate').value;
-  todos[idx].memo = document.getElementById('edMemo').value.replace(/\n/g,'\\n');
-  closeEdit(); renderTodos(); triggerAutoSave(true);
+  if(idx > -1) {
+    todos[idx] = {
+      id: id,
+      task: document.getElementById('edTask').value.trim(),
+      project_id: document.getElementById('edProj').value.trim(),
+      deadline: document.getElementById('edDate').value,
+      is_done: todos[idx].is_done, // 기존 상태 유지
+      memo: document.getElementById('edMemo').value.replace(/\n/g, '↵'), // 줄바꿈을 특수기호로 치환하여 통신 오류 방지
+      order: todos[idx].order || 0
+    };
+    closeEdit(); renderTodos(); triggerAutoSave(true);
+  }
 }
 
-function deleteTodo() {
-  const id = document.getElementById('edId').value;
-  todos = todos.filter(x=>x.id!==id);
-  closeEdit(); renderTodos(); triggerAutoSave(true);
+function deleteTodo() { 
+  todos = todos.filter(x=>x.id !== document.getElementById('edId').value); 
+  closeEdit(); renderTodos(); triggerAutoSave(true); 
 }
 
 function showToast(m) {
