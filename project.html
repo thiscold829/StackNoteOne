@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL,GRAD@100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css"/>
+<script src="config.js"></script>
 <style>
 :root {
   --ink: #111827; --ink-soft: #475569; --ink-mute: #94a3b8;
@@ -37,7 +38,9 @@ body::before {
 .btn-save-manual:hover { transform: translateY(-1px); background: #334155; }
 
 /* Workspace & Input Dock */
-.workspace { flex: 1; display: flex; flex-direction: column; max-width: 1400px; margin: 0 auto; width: 100%; padding: 24px 40px 40px; }
+/* [수술 1] 스크롤 무한 확장 방지: min-height: 0 추가 */
+.workspace { flex: 1; display: flex; flex-direction: column; max-width: 1400px; margin: 0 auto; width: 100%; padding: 24px 40px 40px; min-height: 0; }
+
 .input-dock {
   background: #ffffff; border-radius: 20px; padding: 10px 14px; margin-bottom: 24px;
   box-shadow: 0 10px 30px -10px rgba(15,23,42,0.08), inset 0 1px 0 #fff;
@@ -66,7 +69,7 @@ body::before {
 .st-badge { font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 6px; justify-content: center; padding: 4px 0; border-radius: 8px; }
 .dot { width: 6px; height: 6px; border-radius: 50%; }
 .st-제안 { background: #FFE5A0; color: #655536; } .st-제안 .dot { background: #655536; box-shadow: 0 0 6px #655536; }
-.st-진행 { background: #D4EDBC; color: #1C7A521; } .st-진행 .dot { background: #1C7A52; box-shadow: 0 0 6px #1C7A52; }
+.st-진행 { background: #D4EDBC; color: #1C7A52; } .st-진행 .dot { background: #1C7A52; box-shadow: 0 0 6px #1C7A52; }
 .st-완료 { background: #E6E6E6; color: #4A4A4A; } .st-완료 .dot { background: #4A4A4A; box-shadow: 0 0 6px #4A4A4A; }
 .st-기타 { background: #BFE1F6; color: #034EA5; } .st-기타 .dot { background: #034EA5; box-shadow: 0 0 6px #034EA5; }
 .st-문제발생 { background: #FFCFC9; color: #BC2221; } .st-문제발생 .dot { background: #BC2221; box-shadow: 0 0 6px #BC2221; }
@@ -175,14 +178,15 @@ body::before {
 <iframe name="hidden_iframe" style="display:none;" onload="if(window.isSaving) onSaveSuccess();"></iframe>
 
 <script>
-const SHEET_ID = '16izs14p3VvDfojdBR2Q3Qwty6wHZiRqNbnQ8PxS9eOY';
-const API_URL = 'https://script.google.com/macros/s/AKfycbz6QmihPORS0zp7Z9KPcHfAOVqGYlUVAl982rPZEW3sUcBtpe8OJDMxwrT67pA4ogO9/exec';
+// [수술 3] config.js 연동
+const S_ID = typeof CONFIG !== 'undefined' ? CONFIG.SHEET_ID : '16izs14p3VvDfojdBR2Q3Qwty6wHZiRqNbnQ8PxS9eOY';
+const A_URL = typeof CONFIG !== 'undefined' ? CONFIG.API_URL : 'https://script.google.com/macros/s/AKfycbz6QmihPORS0zp7Z9KPcHfAOVqGYlUVAl982rPZEW3sUcBtpe8OJDMxwrT67pA4ogO9/exec';
 
 let projects = [];
 
 window.onload = async () => {
   try {
-    const res = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=projects`);
+    const res = await fetch(`https://docs.google.com/spreadsheets/d/${S_ID}/gviz/tq?tqx=out:csv&sheet=projects`);
     const txt = await res.text();
     projects = parseCSV(txt) || [];
     renderProjects();
@@ -225,7 +229,7 @@ function commitToCloud() {
   window.isSaving = true;
   document.getElementById('syncDot').classList.add('syncing');
   document.getElementById('syncText').textContent = '동기화 중...';
-  document.getElementById('hidden_form').action = API_URL;
+  document.getElementById('hidden_form').action = A_URL;
   document.getElementById('hidden_form').submit();
 }
 
@@ -269,8 +273,10 @@ function openEdit(idx) {
 }
 
 function closeEdit() { document.getElementById('editModal').classList.remove('active'); }
+
 function saveEdit() {
-  const idx = document.getElementById('edIdx').value;
+  /* [수술 2] Number() 처리로 배열 파괴 방지 */
+  const idx = Number(document.getElementById('edIdx').value);
   projects[idx] = {
     id: document.getElementById('edId').value,
     short_name: document.getElementById('edShort').value,
@@ -278,14 +284,16 @@ function saveEdit() {
     team: document.getElementById('edTeam').value,
     manager: document.getElementById('edManager').value,
     status: document.getElementById('edStatus').value,
-    order: Number(idx) + 1
+    order: idx + 1
   };
   closeEdit(); renderProjects(); commitToCloud();
 }
 
 function deleteProject() {
   if(confirm("이 과제 리스트를 삭제하시겠습니까?")) {
-    projects.splice(document.getElementById('edIdx').value, 1);
+    /* [수술 2] Number() 처리로 배열 파괴 방지 */
+    const idx = Number(document.getElementById('edIdx').value);
+    projects.splice(idx, 1);
     closeEdit(); renderProjects(); commitToCloud();
   }
 }
