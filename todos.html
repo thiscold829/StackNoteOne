@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Action Items - STACKNOTE ONE</title>
+<title>할 일 관리 - STACKNOTE ONE</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL,GRAD@100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css"/>
 <style>
 :root {
-  --ink: #0f172a; --ink-soft: #475569; --ink-mute: #94a3b8;
+  --ink: #111827; --ink-soft: #475569; --ink-mute: #94a3b8;
   --bg-gradient: radial-gradient(1200px 800px at 50% 0%, #ffffff 0%, #f1f5f9 100%);
-  --pool-inner: rgba(241, 245, 249, 0.6);
+  --pool-inner: rgba(226, 232, 240, 0.45); /* 초기 디자인의 유체 질감 */
 }
 html, body { height: 100%; overflow: hidden; }
 body {
@@ -23,138 +23,140 @@ body::before {
   content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
   background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.015 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
-.ms { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; display: inline-block; vertical-align: middle; }
+.ms { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; display: inline-block; vertical-align: middle; line-height: 1; }
 
 /* Navigation */
-.nav { height: 56px; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(30px); border-bottom: 1px solid rgba(0,0,0,0.05); z-index: 100; display: flex; align-items: center; padding: 0 32px; justify-content: space-between;}
-.nav-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; text-decoration: none; }
+.nav { height: 56px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(30px); border-bottom: 0.5px solid rgba(0,0,0,0.05); z-index: 100; display: flex; align-items: center; padding: 0 32px; justify-content: space-between;}
+.nav-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s; text-decoration: none; }
 .nav-btn:hover { background: rgba(0,0,0,0.05); color: var(--ink); }
 
-/* Layout */
-.workspace { flex: 1; display: flex; flex-direction: column; max-width: 1100px; margin: 0 auto; width: 100%; padding: 32px 40px; }
-
-/* Input Dock (Quick Add) */
-.input-dock {
-  background: #ffffff; border-radius: 20px; padding: 8px 12px; margin-bottom: 24px;
-  box-shadow: 0 10px 30px -10px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,1);
-  border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px; z-index: 50; position: relative;
+/* Manual Save Button */
+.btn-save-manual {
+  display: flex; align-items: center; gap: 8px; background: var(--ink); color: #fff;
+  padding: 8px 18px; border-radius: 99px; font-size: 12px; font-weight: 800;
+  cursor: pointer; border: none; transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
 }
-.inp-field { background: transparent; border: none; outline: none; font-size: 14px; font-weight: 600; color: var(--ink); padding: 8px 4px; }
-.inp-field::placeholder { color: var(--ink-mute); font-weight: 500; }
-.divider { width: 1px; height: 18px; background: rgba(0,0,0,0.08); }
+.btn-save-manual:hover { transform: translateY(-1px); background: #334155; }
+.btn-save-manual.syncing { background: #3b82f6; }
 
-/* Date Picker Area (Icon on Left) */
-.date-wrap { display: flex; align-items: center; gap: 6px; padding: 0 8px; cursor: pointer; }
+/* Layout */
+.workspace { flex: 1; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; width: 100%; padding: 24px 40px 40px; }
+
+/* Input Dock (Project -> Content -> Date) */
+.input-dock {
+  background: #ffffff; border-radius: 20px; padding: 10px 14px; margin-bottom: 24px;
+  box-shadow: 0 10px 30px -10px rgba(15,23,42,0.08), inset 0 1px 0 #fff;
+  border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; z-index: 50; position: relative;
+}
+.inp-proj { width: 110px; background: #f1f5f9; border-radius: 12px; border: 1px solid transparent; padding: 8px 10px; font-size: 13px; font-weight: 800; color: var(--ink); outline: none; text-align: center; }
+.inp-proj:focus { background: #fff; border-color: var(--ink-mute); }
+
+.inp-task { flex: 1; background: transparent; border: none; outline: none; font-size: 14px; font-weight: 700; color: var(--ink); padding: 8px 4px; }
+.inp-task::placeholder { color: var(--ink-mute); font-weight: 500; }
+
+.date-wrap { display: flex; align-items: center; gap: 6px; padding-left: 8px; border-left: 1px solid rgba(0,0,0,0.05); }
 .native-date { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: var(--ink-soft); border: none; background: transparent; outline: none; cursor: pointer; width: 115px; }
 
-/* Add Button */
 .btn-add {
   width: 36px; height: 36px; border-radius: 12px; background: var(--ink); color: #fff;
-  display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; border: none;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; border: none;
 }
 .btn-add:hover { background: #334155; transform: scale(1.05); }
-.btn-add:active { transform: scale(0.95); }
 
-/* Tabs & List Pool */
-.tabs { display: flex; gap: 24px; margin-bottom: 16px; padding-left: 8px; }
+/* Tabs & List Pool (Carved Pool Design) */
+.tabs { display: flex; gap: 24px; margin-bottom: 16px; padding-left: 12px; }
 .tab { font-size: 14px; font-weight: 800; color: var(--ink-mute); cursor: pointer; position: relative; transition: 0.2s; }
 .tab.active { color: var(--ink); }
 .tab.active::after { content: ''; position: absolute; bottom: -8px; left: 0; width: 100%; height: 2px; background: var(--ink); }
 
-.list-pool { flex: 1; background: var(--pool-inner); border-radius: 28px; padding: 24px; overflow-y: auto; box-shadow: inset 0 4px 12px rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.02); }
+.list-pool { 
+  flex: 1; background: var(--pool-inner); border-radius: 32px; padding: 28px; overflow-y: auto; 
+  box-shadow: inset 0 12px 24px -8px rgba(15,23,42,0.12), inset 0 2px 4px rgba(0,0,0,0.02);
+  border: 1px solid rgba(0,0,0,0.02);
+}
 .list-pool::-webkit-scrollbar { display: none; }
 
-/* Task Card */
+/* Task Card (Initial Liquid Style) */
 .task-card {
-  background: #ffffff; border-radius: 16px; padding: 14px 20px; margin-bottom: 8px;
-  display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(15,23,42,0.03);
-  border: 1px solid rgba(0,0,0,0.03); transition: 0.2s; cursor: pointer;
+  background: #ffffff; border-radius: 16px; padding: 14px 20px; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 10px -2px rgba(15,23,42,0.04);
+  border: 1px solid rgba(0,0,0,0.02); transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1); cursor: pointer;
 }
-.task-card:hover { transform: translateY(-1px); box-shadow: 0 8px 16px -6px rgba(15,23,42,0.08); border-color: rgba(0,0,0,0.06); }
-.checkbox { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid #e2e8f0; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-.checkbox:hover { border-color: var(--ink-mute); }
+.task-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(15,23,42,0.1); border-color: rgba(0,0,0,0.05); }
+.checkbox { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid #e2e8f0; transition: 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .task-card.done .checkbox { background: var(--ink); border-color: var(--ink); }
 .task-card.done .checkbox::after { content: 'done'; font-family: 'Material Symbols Outlined'; font-size: 14px; color: #fff; font-weight: bold; }
-.task-txt { flex: 1; font-size: 14px; font-weight: 700; color: var(--ink-soft); }
+.task-txt { flex: 1; font-size: 14px; font-weight: 700; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .task-card.done .task-txt { text-decoration: line-through; color: var(--ink-mute); opacity: 0.6; }
 
-/* Sync Status Indicator */
-.sync-status { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.05em; }
-.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #e2e8f0; }
-.sync-dot.syncing { background: #3b82f6; animation: pulse 1s infinite; }
-.sync-dot.done { background: #10b981; }
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+/* Group Header */
+.group-header { display: flex; align-items: center; gap: 12px; margin: 24px 0 12px 8px; }
+.group-label { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 900; color: var(--ink-mute); letter-spacing: 0.2em; text-transform: uppercase; }
+.group-line { flex: 1; height: 1px; background: rgba(0,0,0,0.05); }
 
-/* Modals & Others */
+/* Modals */
 .overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.15); backdrop-filter: blur(8px); z-index: 1000; display: none; align-items: center; justify-content: center; }
 .overlay.active { display: flex; }
-.modal-box { background: #fff; width: 480px; border-radius: 28px; box-shadow: 0 40px 80px -20px rgba(0,0,0,0.15); padding: 32px; }
-.modal-box input, .modal-box textarea { width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 600; outline: none; margin-bottom: 16px; }
-.proj-dropdown { position: absolute; top: 110%; left: 0; width: 300px; max-height: 240px; background: #fff; border-radius: 16px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); overflow-y: auto; display: none; z-index: 100; padding: 8px; }
-.proj-dropdown.active { display: block; }
-.proj-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.proj-item:hover { background: #f1f5f9; }
+.modal-box { background: #fff; width: 460px; border-radius: 28px; box-shadow: 0 40px 80px -20px rgba(0,0,0,0.2); padding: 32px; }
+.modal-box input, .modal-box textarea { width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 700; outline: none; margin-bottom: 16px; }
+
+/* Toast */
+#toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 10px 24px; border-radius: 99px; font-size: 12px; font-weight: 800; opacity: 0; transition: all 0.4s; z-index: 10000; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(10px); }
 </style>
 </head>
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-btn"><span class="ms">arrow_back</span> Hub</a>
-  <div class="sync-status" id="syncDisplay">
-    <div class="sync-dot" id="syncDot"></div>
-    <span id="syncText">Cloud Synced</span>
-  </div>
-  <div class="w-[80px]"></div> </nav>
+  <a href="index.html" class="nav-btn"><span class="ms">arrow_back</span> HOME</a>
+  <button class="btn-save-manual" id="saveBtn" onclick="forceManualSave()">
+    <span class="ms text-[18px]" id="syncIcon">cloud_sync</span>
+    <span id="syncText">DB Sync</span>
+  </button>
+</nav>
 
 <main class="workspace">
   <div class="input-dock">
-    <div class="relative flex items-center">
-      <input type="text" id="inProj" list="projList" class="inp-field w-[90px] text-center" placeholder="사업" autocomplete="off">
-      <datalist id="projList"></datalist>
-      <button onclick="toggleProjDrop(event)" class="text-slate-400 hover:text-slate-600 ml-1"><span class="ms text-[18px]">expand_more</span></button>
-      <div class="proj-dropdown" id="projDrop"></div>
-    </div>
+    <input type="text" id="inProj" list="projList" class="inp-proj" placeholder="사업" autocomplete="off" tabindex="1">
+    <datalist id="projList"></datalist>
     
-    <div class="divider"></div>
+    <input type="text" id="inTask" class="inp-task" placeholder="어떤 업무를 추가할까요?" onkeypress="if(event.key==='Enter') addTodo()" tabindex="2">
     
-    <input type="text" id="inTask" class="inp-field flex-1" placeholder="새로운 할 일을 입력하세요" onkeypress="if(event.key==='Enter') addTodo()">
-    
-    <div class="divider"></div>
-    
-    <div class="date-wrap" onclick="document.getElementById('inDate').showPicker()">
-      <span class="ms text-slate-400 text-[18px]">calendar_month</span>
-      <input type="date" id="inDate" class="native-date">
+    <div class="date-wrap">
+      <span class="ms text-slate-400 text-[20px] cursor-pointer" onclick="document.getElementById('inDate').showPicker()">calendar_month</span>
+      <input type="date" id="inDate" class="native-date" tabindex="3">
     </div>
 
-    <button class="btn-add" onclick="addTodo()" title="할 일 추가"><span class="ms">add</span></button>
+    <button class="btn-add" onclick="addTodo()" title="할 일 추가" tabindex="4"><span class="ms">add</span></button>
   </div>
 
   <div class="tabs">
-    <div class="tab active" id="tabActive" onclick="switchTab('active')">IN PROGRESS</div>
-    <div class="tab" id="tabDone" onclick="switchTab('done')">COMPLETED</div>
+    <div class="tab active" id="tabActive" onclick="switchTab('active')">진행 중</div>
+    <div class="tab" id="tabDone" onclick="switchTab('done')">완료됨</div>
   </div>
 
   <div class="list-pool" id="listPool">
-    <div class="text-center text-slate-400 font-bold mt-10">Syncing with DB...</div>
+    <div class="text-center text-slate-400 font-bold mt-10">데이터를 동기화하고 있습니다...</div>
   </div>
 </main>
 
 <div class="overlay" id="editModal">
   <div class="modal-box">
     <div class="flex justify-between items-center mb-6">
-      <h3 class="text-[15px] font-black tracking-tight">ITEM DETAILS</h3>
+      <h3 class="text-[14px] font-black tracking-tight uppercase text-slate-400">Item Details</h3>
       <button onclick="closeEdit()" class="text-slate-400 hover:text-slate-600"><span class="ms">close</span></button>
     </div>
     <input type="hidden" id="edId">
     <div class="flex gap-3">
-      <input type="text" id="edProj" class="w-[110px]" placeholder="사업">
+      <input type="text" id="edProj" class="w-[110px] !bg-slate-50" placeholder="사업" list="projList">
       <input type="date" id="edDate" class="flex-1" style="font-family:'Space Grotesk'">
     </div>
-    <input type="text" id="edTask" placeholder="무엇을 해야 하나요?" class="font-bold">
-    <textarea id="edMemo" rows="4" placeholder="메모가 필요하신가요?"></textarea>
+    <input type="text" id="edTask" placeholder="무엇을 해야 하나요?" class="font-bold text-[16px]">
+    <textarea id="edMemo" rows="4" placeholder="필요한 상세 내용이 있으면 작성해 주세요"></textarea>
     <div class="flex justify-between items-center mt-2">
-      <button onclick="deleteTodo()" class="text-rose-500 font-bold text-[13px] hover:bg-rose-50 px-3 py-2 rounded-lg">Delete</button>
-      <button onclick="saveEdit()" class="bg-slate-900 text-white font-bold text-[13px] px-6 py-2 rounded-xl">Update</button>
+      <button onclick="deleteTodo()" class="text-rose-500 font-bold text-[13px] hover:bg-rose-50 px-4 py-2 rounded-lg">삭제</button>
+      <button onclick="saveEdit()" class="bg-slate-900 text-white font-bold text-[13px] px-8 py-2 rounded-xl">업데이트</button>
     </div>
   </div>
 </div>
@@ -163,7 +165,6 @@ body::before {
 <iframe name="hidden_iframe" style="display:none;" onload="if(window.isSaving) onSaveSuccess();"></iframe>
 
 <script>
-// 대표님이 제공하신 완벽한 시트 ID와 API URL 셋팅
 const SHEET_ID = '16izs14p3VvDfojdBR2Q3Qwty6wHZiRqNbnQ8PxS9eOY';
 const API_URL = 'https://script.google.com/macros/s/AKfycbz6QmihPORS0zp7Z9KPcHfAOVqGYlUVAl982rPZEW3sUcBtpe8OJDMxwrT67pA4ogO9/exec';
 
@@ -178,7 +179,7 @@ window.onload = async () => {
     projects = parseCSV(await pRes.text()) || [];
     todos = parseCSV(await tRes.text()) || [];
     initProjUI(); renderTodos();
-  } catch(e) { console.error(e); }
+  } catch(e) { console.error("DB Load Error", e); }
 };
 
 function parseCSV(t){
@@ -192,21 +193,58 @@ function parseCSV(t){
 }
 
 function initProjUI() {
-  const d = document.getElementById('projList'), dr = document.getElementById('projDrop');
-  d.innerHTML = projects.map(p=>`<option value="${p.short_name}">${p.full_name}</option>`).join('');
-  dr.innerHTML = projects.map(p=>`<div class="proj-item" onclick="selectProj('${p.short_name}')"><span class="bg-slate-900 text-white text-[9px] px-1.5 py-0.5 rounded">${p.short_name}</span><span class="truncate">${p.full_name}</span></div>`).join('');
+  document.getElementById('projList').innerHTML = projects.map(p=>`<option value="${p.short_name}">${p.full_name}</option>`).join('');
 }
-function selectProj(n) { document.getElementById('inProj').value=n; document.getElementById('projDrop').classList.remove('active'); document.getElementById('inTask').focus(); }
-function toggleProjDrop(e) { e.stopPropagation(); document.getElementById('projDrop').classList.toggle('active'); }
-document.addEventListener('click',()=>document.getElementById('projDrop').classList.remove('active'));
 
-/* --- Render & Logic --- */
+function setSyncStatus(state) {
+  const btn = document.getElementById('saveBtn');
+  const ico = document.getElementById('syncIcon');
+  const txt = document.getElementById('syncText');
+  if (state === 'syncing') {
+    btn.classList.add('syncing');
+    ico.textContent = 'sync'; ico.classList.add('animate-spin');
+    txt.textContent = '동기화 중...';
+  } else {
+    btn.classList.remove('syncing');
+    ico.textContent = 'cloud_done'; ico.classList.remove('animate-spin');
+    txt.textContent = 'DB 동기화 완료';
+  }
+}
+
+function triggerAutoSave(immediate = false) {
+  clearTimeout(autoSaveTimer);
+  setSyncStatus('syncing');
+  if (immediate) commitToCloud();
+  else autoSaveTimer = setTimeout(commitToCloud, 1500);
+}
+
+function forceManualSave() {
+  if (window.isSaving) return;
+  showToast("수동 동기화를 시작합니다.");
+  triggerAutoSave(true);
+}
+
+function commitToCloud() {
+  if(window.isSaving) return;
+  const payload = { action: 'write', sheetName: 'todos', data: todos };
+  document.getElementById('payload_input').value = JSON.stringify(payload);
+  window.isSaving = true;
+  const form = document.getElementById('hidden_form');
+  form.action = API_URL;
+  form.submit();
+}
+
+function onSaveSuccess() {
+  window.isSaving = false;
+  setSyncStatus('done');
+}
+
 function renderTodos() {
   const pool = document.getElementById('listPool');
   const today = new Date().toISOString().split('T')[0];
   let filtered = todos.filter(t => currentTab === 'active' ? String(t.is_done).toUpperCase() !== 'TRUE' : String(t.is_done).toUpperCase() === 'TRUE');
   
-  if(!filtered.length) { pool.innerHTML = `<div class="text-center text-slate-400 font-bold mt-12 text-[13px] opacity-60">Nothing here.</div>`; return; }
+  if(!filtered.length) { pool.innerHTML = `<div class="text-center text-slate-400 font-bold mt-12 opacity-60">리스트가 비어 있습니다.</div>`; return; }
 
   const grouped = {};
   filtered.forEach(t => { 
@@ -218,13 +256,13 @@ function renderTodos() {
   let html = '';
   Object.keys(grouped).forEach(k => {
     grouped[k].sort((a,b) => (a.deadline||'9999').localeCompare(b.deadline||'9999'));
-    html += `<div class="flex items-center gap-3 my-6 px-2"><span class="text-[11px] font-black text-slate-400 tracking-widest">${k}</span><div class="flex-1 h-[1px] bg-slate-200"></div></div>`;
+    html += `<div class="group-header"><span class="group-label">${k}</span><div class="group-line"></div></div>`;
     grouped[k].forEach(t => {
       const isOver = t.deadline && t.deadline <= today && currentTab === 'active';
       html += `
-        <div class="task-card ${currentTab==='done'?'done':''}">
+        <div class="task-card ${currentTab==='done'?'done':''}" onclick="openEdit('${t.id}')">
           <div class="checkbox" onclick="event.stopPropagation(); toggleDone('${t.id}')"></div>
-          <div class="task-txt" onclick="openEdit('${t.id}')">${t.task} ${t.memo?'<span class="ms text-slate-300 text-[14px] ml-1">sticky_note_2</span>':''}</div>
+          <div class="task-txt">${t.task} ${t.memo?'<span class="ms text-slate-300 text-[14px] ml-1">sticky_note_2</span>':''}</div>
           ${t.deadline ? `<div class="text-[12px] font-bold ${isOver?'text-rose-500':'text-slate-400'} font-['Space_Grotesk']">${t.deadline.slice(5).replace('-','/')}</div>` : ''}
           ${isOver ? `<div class="w-1.5 h-1.5 bg-rose-500 rounded-full shadow-[0_0_8px_rgba(244,63,94,0.6)] ml-1"></div>`:''}
         </div>`;
@@ -240,62 +278,28 @@ function switchTab(t) {
   renderTodos();
 }
 
-/* --- Action & Auto Save --- */
-// immediate 파라미터가 true면 딜레이 없이 즉각 전송합니다.
-function triggerAutoSave(immediate = false) {
-  clearTimeout(autoSaveTimer);
-  document.getElementById('syncDot').className = 'sync-dot syncing';
-  document.getElementById('syncText').textContent = 'Syncing...';
-  
-  if (immediate) {
-    commitToCloud();
-  } else {
-    autoSaveTimer = setTimeout(commitToCloud, 1500); 
-  }
-}
-
-function commitToCloud() {
-  if(window.isSaving) return; // 중복 전송 방지
-  const payload = { action: 'write', sheetName: 'todos', data: todos };
-  document.getElementById('payload_input').value = JSON.stringify(payload);
-  window.isSaving = true;
-  const form = document.getElementById('hidden_form');
-  form.action = API_URL;
-  form.submit();
-}
-
-function onSaveSuccess() {
-  window.isSaving = false;
-  document.getElementById('syncDot').className = 'sync-dot done';
-  document.getElementById('syncText').textContent = 'Cloud Synced';
-}
-
-/* CRUD Operations (즉각 전송) */
 function addTodo() {
   const t = document.getElementById('inTask').value.trim();
   if(!t) return;
   todos.push({
-    id:'t_'+Date.now(), project_id:document.getElementById('inProj').value,
+    id:'t_'+Date.now(), project_id:document.getElementById('inProj').value.trim(),
     task:t, deadline:document.getElementById('inDate').value,
     is_done:'FALSE', memo:'', order: todos.length+1
   });
-  document.getElementById('inTask').value=''; 
-  renderTodos(); 
-  triggerAutoSave(true); // 수술 완료: 추가 시 즉각 전송
+  document.getElementById('inTask').value=''; renderTodos(); triggerAutoSave(true);
 }
 
 function toggleDone(id) {
   const idx = todos.findIndex(x=>x.id===id);
   todos[idx].is_done = String(todos[idx].is_done).toUpperCase()==='TRUE'?'FALSE':'TRUE';
-  renderTodos(); 
-  triggerAutoSave(true); // 수술 완료: 체크 시 즉각 전송
+  renderTodos(); triggerAutoSave(true);
 }
 
 function openEdit(id) {
   const t = todos.find(x=>x.id===id);
   document.getElementById('edId').value=t.id; document.getElementById('edProj').value=t.project_id;
   document.getElementById('edTask').value=t.task; document.getElementById('edDate').value=t.deadline;
-  document.getElementById('edMemo').value=t.memo.replace(/\\n/g,'\n');
+  document.getElementById('edMemo').value=(t.memo||'').replace(/\\n/g,'\n');
   document.getElementById('editModal').classList.add('active');
 }
 function closeEdit() { document.getElementById('editModal').classList.remove('active'); }
@@ -303,21 +307,23 @@ function closeEdit() { document.getElementById('editModal').classList.remove('ac
 function saveEdit() {
   const id = document.getElementById('edId').value;
   const idx = todos.findIndex(x=>x.id===id);
-  todos[idx].project_id = document.getElementById('edProj').value;
+  todos[idx].project_id = document.getElementById('edProj').value.trim();
   todos[idx].task = document.getElementById('edTask').value;
   todos[idx].deadline = document.getElementById('edDate').value;
   todos[idx].memo = document.getElementById('edMemo').value.replace(/\n/g,'\\n');
-  closeEdit(); 
-  renderTodos(); 
-  triggerAutoSave(true); // 수술 완료: 수정 시 즉각 전송
+  closeEdit(); renderTodos(); triggerAutoSave(true);
 }
 
 function deleteTodo() {
   const id = document.getElementById('edId').value;
   todos = todos.filter(x=>x.id!==id);
-  closeEdit(); 
-  renderTodos(); 
-  triggerAutoSave(true); // 수술 완료: 삭제 시 즉각 전송
+  closeEdit(); renderTodos(); triggerAutoSave(true);
+}
+
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 </script>
 </body>
