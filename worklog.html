@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>일일 업무보고 - STACKNOTE ONE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL,GRAD@100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css"/>
+<script src="config.js"></script>
+<style>
+:root {
+  --ink: #0f172a; --ink-soft: #475569; --ink-mute: #94a3b8;
+  --bg-gradient: radial-gradient(1200px 800px at 50% 0%, #ffffff 0%, #f1f5f9 100%);
+  --pool-inner: rgba(226, 232, 240, 0.45);
+}
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'Pretendard', -apple-system, sans-serif; color: var(--ink); display: flex; flex-direction: column; background: var(--bg-gradient); }
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.015 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); }
+.ms { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; display: inline-block; vertical-align: middle; line-height: 1; }
+
+/* Navigation & Main Tabs */
+.nav { height: 60px; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(30px); border-bottom: 1px solid rgba(0,0,0,0.05); z-index: 100; display: flex; align-items: center; padding: 0 40px; justify-content: space-between;}
+.nav-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s; text-decoration: none; }
+.nav-btn:hover { background: rgba(0,0,0,0.05); color: var(--ink); }
+
+.main-tabs { display: flex; gap: 8px; background: rgba(15,23,42,0.04); padding: 4px; border-radius: 12px; }
+.main-tab { padding: 6px 20px; border-radius: 8px; font-size: 13px; font-weight: 800; color: var(--ink-mute); cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1); }
+.main-tab.active { background: #ffffff; color: var(--ink); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #e2e8f0; margin-right: 8px; }
+.sync-dot.unsaved { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+.sync-dot.syncing { background: #3b82f6; animation: pulse 1s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Workspace Containers */
+.workspace { flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 32px 40px 40px; display: flex; flex-direction: column; min-height: 0; }
+
+/* ── TAB 1: WORKLOG WRITER (Split View) ── */
+.writer-grid { display: grid; grid-template-columns: 380px 1fr; gap: 32px; height: 100%; min-height: 0; }
+.panel { display: flex; flex-direction: column; background: var(--pool-inner); border-radius: 32px; padding: 28px; box-shadow: inset 0 8px 24px -8px rgba(15,23,42,0.1), inset 0 2px 4px rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.02); overflow: hidden; }
+.panel-head { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 800; color: var(--ink-mute); letter-spacing: 0.1em; margin-bottom: 20px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center;}
+.todo-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+.todo-scroll::-webkit-scrollbar { display: none; }
+.todo-card { background: #ffffff; border-radius: 16px; padding: 14px 18px; box-shadow: 0 4px 10px -2px rgba(15,23,42,0.04); border: 1px solid rgba(0,0,0,0.02); cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.todo-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -8px rgba(15,23,42,0.1); border-color: rgba(0,0,0,0.05); }
+.t-proj { font-size: 10px; font-weight: 900; background: var(--ink); color: #fff; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.t-task { font-size: 13px; font-weight: 700; color: var(--ink-soft); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.canvas-wrap { display: flex; flex-direction: column; gap: 24px; min-height: 0; }
+.input-dock { background: #ffffff; border-radius: 24px; padding: 10px 14px; box-shadow: 0 10px 30px -10px rgba(15,23,42,0.08), inset 0 1px 0 #fff; border: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; }
+.inp-proj { width: 120px; background: #f8fafc; border-radius: 12px; border: 1px solid transparent; padding: 10px 14px; font-size: 13px; font-weight: 800; color: var(--ink); outline: none; text-align: center; transition: 0.2s; }
+.inp-proj:focus { background: #fff; border-color: var(--ink-mute); }
+.inp-task { flex: 1; background: transparent; border: none; outline: none; font-size: 14px; font-weight: 700; color: var(--ink); padding: 8px 8px; }
+.inp-task::placeholder { color: var(--ink-mute); font-weight: 500; }
+.btn-add { width: 40px; height: 40px; border-radius: 14px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; transition: 0.2s; }
+.btn-add:hover { background: #334155; transform: scale(1.05); }
+
+.preview-board { flex: 1; background: #ffffff; border-radius: 32px; padding: 32px 40px; box-shadow: 0 8px 30px -4px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.04); display: flex; flex-direction: column; overflow: hidden; }
+.preview-text { flex: 1; width: 100%; border: none; outline: none; resize: none; font-family: 'Pretendard', sans-serif; font-size: 15px; font-weight: 500; line-height: 1.8; color: var(--ink); background: transparent; }
+.preview-text::-webkit-scrollbar { width: 6px; }
+.preview-text::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
+
+/* Action Footer (Copy & Upload) */
+.action-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.05); }
+.foot-buttons { display: flex; gap: 12px; }
+.btn-copy { display: flex; align-items: center; gap: 8px; background: #f8fafc; color: var(--ink); padding: 12px 20px; border-radius: 16px; font-size: 13px; font-weight: 800; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); transition: all 0.2s; }
+.btn-copy:hover { background: #f1f5f9; transform: translateY(-1px); }
+.btn-upload { display: flex; align-items: center; gap: 8px; background: var(--ink); color: #fff; padding: 12px 24px; border-radius: 16px; font-size: 14px; font-weight: 800; cursor: pointer; border: none; transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1); box-shadow: 0 8px 16px -4px rgba(15, 23, 42, 0.2); }
+.btn-upload:hover { transform: translateY(-2px); background: #334155; box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.3); }
+
+/* ── TAB 2: VIEWER (History) ── */
+.viewer-wrap { display: none; flex-direction: column; height: 100%; min-height: 0; }
+.filter-bar { display: flex; align-items: center; gap: 24px; margin-bottom: 24px; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); padding: 14px 24px; border-radius: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.04); }
+.date-range-wrap { display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); }
+.f-date { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: var(--ink-soft); border: none; outline: none; cursor: pointer; background: transparent; }
+.f-pills { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; border-left: 1px solid rgba(0,0,0,0.05); padding-left: 24px; }
+.f-pill { padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 800; background: transparent; color: var(--ink-mute); cursor: pointer; transition: all 0.2s; border: 1px solid rgba(0,0,0,0.05); }
+.f-pill:hover { background: #f8fafc; color: var(--ink-soft); }
+.f-pill.active { background: var(--ink); color: #fff; border-color: var(--ink); box-shadow: 0 4px 10px rgba(15,23,42,0.15); }
+
+.timeline-scroll { flex: 1; overflow-y: auto; padding-right: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(600px, 1fr)); gap: 20px; align-content: start; }
+.timeline-scroll::-webkit-scrollbar { display: none; }
+.day-card { background: #ffffff; border: 1px solid rgba(0,0,0,0.04); border-radius: 28px; padding: 32px; box-shadow: 0 8px 24px -4px rgba(0,0,0,0.03); transition: 0.3s; }
+.day-card:hover { box-shadow: 0 12px 32px -8px rgba(0,0,0,0.08); }
+.day-date { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; }
+.vl-item { display: flex; align-items: flex-start; gap: 16px; padding: 10px 14px; border-radius: 16px; transition: 0.2s; }
+.vl-item:hover { background: #f8fafc; }
+.vl-proj { display: inline-block; background: var(--ink); color: #fff; text-align: center; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 6px; width: 60px; flex-shrink: 0;}
+.vl-task { flex: 1; font-size: 14px; font-weight: 600; color: var(--ink-soft); line-height: 1.5; padding-top: 1px;}
+.vl-edit { opacity: 0; cursor: pointer; color: var(--ink-mute); transition: 0.2s; padding-top: 1px; }
+.vl-item:hover .vl-edit { opacity: 1; }
+.vl-edit:hover { color: #3b82f6; }
+
+/* Modals */
+.overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.15); backdrop-filter: blur(12px); z-index: 1000; display: none; align-items: center; justify-content: center; }
+.overlay.active { display: flex; }
+.modal-box { background: #fff; width: 480px; border-radius: 32px; box-shadow: 0 40px 80px -20px rgba(0,0,0,0.25); padding: 36px; }
+.modal-inp { width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px 16px; font-size: 14px; font-weight: 700; outline: none; margin-bottom: 16px; transition: 0.2s; }
+.modal-inp:focus { background: #fff; border-color: var(--ink-soft); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+
+#toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 12px 28px; border-radius: 99px; font-size: 13px; font-weight: 800; opacity: 0; transition: all 0.4s; z-index: 10000; box-shadow: 0 10px 24px rgba(0,0,0,0.15); }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(10px); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 홈</a>
+  
+  <div class="main-tabs">
+    <div class="main-tab active" id="tabBtnWrite" onclick="switchMainTab('write')">일일 보고 작성</div>
+    <div class="main-tab" id="tabBtnView" onclick="switchMainTab('view')">전체 기록 관리</div>
+  </div>
+  
+  <div class="flex items-center text-[12px] font-bold text-slate-500 w-[140px] justify-end">
+    <div class="sync-dot" id="syncDot"></div><span id="syncText">DB 동기화 완료</span>
+  </div>
+</nav>
+
+<main class="workspace" id="viewWrite">
+  <div class="flex justify-between items-center mb-6 px-2">
+    <div class="flex items-center gap-4">
+      <h2 class="text-[22px] font-black tracking-tight text-slate-800">Today's Report</h2>
+      <div class="flex items-center gap-2 bg-white px-4 py-2 border border-slate-100 rounded-full shadow-sm">
+        <span class="ms text-[18px] text-slate-400">calendar_month</span>
+        <input type="date" id="logDate" onchange="changeDate()" class="border-none outline-none font-['Space_Grotesk'] text-[14px] font-bold text-slate-700 bg-transparent cursor-pointer">
+      </div>
+    </div>
+  </div>
+
+  <div class="writer-grid">
+    <div class="panel">
+      <div class="panel-head">
+        <span>Import from Todos</span>
+        <span class="ms text-[18px] text-slate-400 cursor-pointer hover:text-slate-600 transition" onclick="loadData()" title="새로고침">refresh</span>
+      </div>
+      <div class="todo-scroll" id="todoPool">
+        <div class="text-center text-slate-400 text-[12px] mt-10">데이터를 불러오는 중...</div>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <div class="input-dock">
+        <input type="text" id="inProj" list="projList" class="inp-proj" placeholder="사업 약어" autocomplete="off" tabindex="1">
+        <datalist id="projList"></datalist>
+        <div class="w-[1px] h-[18px] bg-slate-200 mx-1"></div>
+        <input type="text" id="inTask" class="inp-task" placeholder="수행한 업무나 상세 내용 입력 (Enter)" onkeypress="if(event.key==='Enter') addWorklogManual()" tabindex="2">
+        <button class="btn-add" onclick="addWorklogManual()" title="추가" tabindex="3"><span class="ms">add</span></button>
+      </div>
+
+      <div class="preview-board">
+        <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+          <span class="font-['Space_Grotesk'] text-[12px] font-black text-slate-400 tracking-widest uppercase">Report Canvas</span>
+          <button onclick="clearToday()" class="text-[13px] font-bold text-rose-400 hover:text-rose-600 transition">당일 기록 비우기</button>
+        </div>
+        
+        <textarea id="previewText" class="preview-text" placeholder="여기에 오늘의 업무가 자동으로 정리됩니다. 직접 수정하셔도 좋습니다."></textarea>
+        
+        <div class="action-foot">
+          <span class="text-[12px] font-medium text-slate-400">※ 입력한 항목은 반드시 [최종 DB 업로드]를 눌러야 저장됩니다.</span>
+          <div class="foot-buttons">
+            <button class="btn-copy" onclick="copyReport()">
+              <span class="ms text-[18px]">content_copy</span> 복사하기
+            </button>
+            <button class="btn-upload" onclick="commitToCloud()">
+              <span class="ms text-[18px]">cloud_upload</span> 최종 DB 업로드
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<main class="workspace viewer-wrap" id="viewHistory">
+  <div class="filter-bar">
+    <div class="date-range-wrap">
+      <span class="ms text-slate-400 text-[18px]">calendar_month</span>
+      <input type="date" id="fStartDate" class="f-date" onchange="renderViewer()" title="시작일 (비우면 전체)">
+      <span class="text-slate-300 font-bold mx-1">~</span>
+      <input type="date" id="fEndDate" class="f-date" onchange="renderViewer()" title="종료일 (비우면 전체)">
+    </div>
+    
+    <div class="f-pills" id="fProjPills">
+      </div>
+  </div>
+
+  <div class="timeline-scroll" id="viewerTimeline">
+    <div class="text-center text-slate-400 mt-10">데이터를 불러오는 중...</div>
+  </div>
+</main>
+
+<div class="overlay" id="editModal">
+  <div class="modal-box">
+    <div class="flex justify-between items-center mb-8">
+      <h3 class="text-[15px] font-black tracking-widest text-slate-400 uppercase">Edit Record</h3>
+      <button onclick="closeEdit()" class="text-slate-400 hover:text-rose-500 transition"><span class="ms text-[24px]">close</span></button>
+    </div>
+    <input type="hidden" id="edId">
+    
+    <div class="flex gap-3">
+      <input type="date" id="edDate" class="modal-inp w-[150px] font-['Space_Grotesk']">
+      <input type="text" id="edProj" list="projList" class="modal-inp w-[110px] text-center" placeholder="사업">
+    </div>
+    <input type="text" id="edTask" class="modal-inp" placeholder="업무 내용">
+
+    <div class="flex justify-between items-center mt-6">
+      <button onclick="deleteLog()" class="text-rose-500 font-bold text-[14px] hover:bg-rose-50 px-5 py-2.5 rounded-xl transition">삭제</button>
+      <button onclick="saveEdit()" class="bg-slate-900 text-white font-bold text-[14px] px-8 py-3 rounded-2xl hover:bg-slate-800 shadow-md transition">변경사항 적용 (즉시 저장)</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<form id="hidden_form" target="hidden_iframe" method="POST" style="display:none;"><input type="hidden" name="payload" id="payload_input"></form>
+<iframe name="hidden_iframe" style="display:none;" onload="if(window.isSaving) onSaveSuccess();"></iframe>
+
+<script>
+const S_ID = typeof CONFIG !== 'undefined' ? CONFIG.SHEET_ID : '16izs14p3VvDfojdBR2Q3Qwty6wHZiRqNbnQ8PxS9eOY';
+const A_URL = typeof CONFIG !== 'undefined' ? CONFIG.API_URL : 'https://script.google.com/macros/s/AKfycbz6QmihPORS0zp7Z9KPcHfAOVqGYlUVAl982rPZEW3sUcBtpe8OJDMxwrT67pA4ogO9/exec';
+
+let projects = [], todos = [], worklogs = [];
+let hasUnsavedChanges = false;
+let currentFilterProjs = []; // 다중 선택 배열 (비어있으면 전체)
+
+window.onload = () => {
+  const d = new Date();
+  document.getElementById('logDate').value = d.toISOString().split('T')[0];
+  // 뷰어 필터 초기화: 기간 전체(빈값), 사업 전체(배열 비움)
+  document.getElementById('fStartDate').value = '';
+  document.getElementById('fEndDate').value = '';
+  loadData();
+};
+
+async function loadData() {
+  try {
+    const [pRes, tRes, wRes] = await Promise.all([
+      fetch(`https://docs.google.com/spreadsheets/d/${S_ID}/gviz/tq?tqx=out:csv&sheet=projects`),
+      fetch(`https://docs.google.com/spreadsheets/d/${S_ID}/gviz/tq?tqx=out:csv&sheet=todos`),
+      fetch(`https://docs.google.com/spreadsheets/d/${S_ID}/gviz/tq?tqx=out:csv&sheet=worklogs`)
+    ]);
+    projects = parseCSV(await pRes.text()) || [];
+    todos = parseCSV(await tRes.text()) || [];
+    worklogs = wRes.ok ? (parseCSV(await wRes.text()) || []) : [];
+    
+    initUI();
+  } catch(e) { console.error(e); }
+}
+
+function parseCSV(t){
+  const lines=t.trim().split('\n'); if(lines.length<2) return [];
+  const hdrs=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map(l=>{
+    const v=[]; let c='', q=false;
+    for(let i=0; i<l.length; i++){ const ch=l[i]; if(ch==='"') q=!q; else if(ch===','&&!q){v.push(c.trim());c='';} else c+=ch; }
+    v.push(c.trim()); const o={}; hdrs.forEach((h,i)=>o[h]=(v[i]||'').replace(/^"|"$/g,'')); return o;
+  });
+}
+
+function initUI() {
+  document.getElementById('projList').innerHTML = projects.map(p=>`<option value="${p.short_name}">${p.full_name}</option>`).join('');
+  renderTodos(); 
+  renderPreview(); 
+  updateViewerFilters(); // 사업 필터 렌더링
+  renderViewer();
+}
+
+function switchMainTab(tab) {
+  document.getElementById('tabBtnWrite').classList.toggle('active', tab==='write');
+  document.getElementById('tabBtnView').classList.toggle('active', tab==='view');
+  document.getElementById('viewWrite').style.display = tab==='write' ? 'flex' : 'none';
+  document.getElementById('viewHistory').style.display = tab==='view' ? 'flex' : 'none';
+  if(tab === 'view') {
+    updateViewerFilters(); // 탭 이동 시 실제 등록된 사업 기반으로 필터 갱신
+    renderViewer();
+  }
+}
+
+function changeDate() { renderTodos(); renderPreview(); }
+
+/* ── TAB 1: Todo Import & Canvas ── */
+function renderTodos() {
+  const pool = document.getElementById('todoPool');
+  let list = todos.filter(t => t.task);
+  if(!list.length) { pool.innerHTML = `<div class="text-center text-slate-400 font-bold mt-10 text-[12px] opacity-60">등록된 할 일이 없습니다.</div>`; return; }
+
+  list.sort((a,b) => (a.project_id||'').localeCompare(b.project_id||''));
+  pool.innerHTML = list.map(t => `
+    <div class="todo-card" onclick="importTodo('${t.project_id}', '${t.task.replace(/'/g,"\\'")}')">
+      <div class="t-proj">${t.project_id || '기타'}</div>
+      <div class="t-task ${String(t.is_done).toUpperCase()==='TRUE' ? 'line-through text-slate-400' : ''}">${t.task}</div>
+      <span class="ms text-slate-300 text-[18px]">add_circle</span>
+    </div>
+  `).join('');
+}
+
+function importTodo(proj, task) { addWorklog(proj, task); }
+function addWorklogManual() {
+  const proj = document.getElementById('inProj').value.trim();
+  const task = document.getElementById('inTask').value.trim();
+  if(!task) return;
+  addWorklog(proj, task);
+  document.getElementById('inTask').value = ''; document.getElementById('inTask').focus();
+}
+
+function addWorklog(proj, task) {
+  const date = document.getElementById('logDate').value;
+  worklogs.push({ id: 'w_' + Date.now(), date: date, project_id: proj || '기타', task: task, order: worklogs.length + 1 });
+  markUnsaved(); renderPreview();
+}
+
+function markUnsaved() {
+  hasUnsavedChanges = true;
+  document.getElementById('syncDot').className = 'sync-dot unsaved';
+  document.getElementById('syncText').textContent = '저장 대기 중';
+}
+
+function renderPreview() {
+  const date = document.getElementById('logDate').value;
+  const todayLogs = worklogs.filter(w => w.date === date);
+  if(!todayLogs.length) { document.getElementById('previewText').value = ''; return; }
+
+  const grouped = {};
+  todayLogs.forEach(w => { const pid = w.project_id || '기타'; if(!grouped[pid]) grouped[pid] = []; grouped[pid].push(w.task); });
+
+  let txt = '';
+  const sortedKeys = Object.keys(grouped).sort((a,b) => {
+    let pA = projects.find(p=>p.short_name === a), pB = projects.find(p=>p.short_name === b);
+    return (pA ? Number(pA.order) : 999) - (pB ? Number(pB.order) : 999);
+  });
+
+  sortedKeys.forEach(k => {
+    txt += `[${k}]\n`;
+    grouped[k].forEach(task => { txt += `- ${task}\n`; });
+  });
+  document.getElementById('previewText').value = txt.trim();
+}
+
+function clearToday() {
+  if(confirm('오늘 캔버스에 추가된 내역을 비우시겠습니까?')) {
+    const date = document.getElementById('logDate').value;
+    worklogs = worklogs.filter(w => w.date !== date);
+    markUnsaved(); renderPreview();
+  }
+}
+
+function copyReport() {
+  const txt = document.getElementById('previewText').value;
+  if(!txt) { showToast("복사할 내용이 없습니다."); return; }
+  navigator.clipboard.writeText(txt).then(() => showToast("보고서가 복사되었습니다! 📋")).catch(() => showToast("복사 실패."));
+}
+
+/* ── TAB 2: VIEWER (History & Multi-Filter) ── */
+function updateViewerFilters() {
+  // 실제 업무보고 데이터(worklogs)에 존재하는 사업명만 추출하여 필터 생성
+  const uniqueProjs = [...new Set(worklogs.map(w => w.project_id || '기타'))].sort();
+  
+  let pills = `<div class="f-pill ${currentFilterProjs.length===0 ? 'active':''}" onclick="toggleProjFilter('ALL')">전체</div>`;
+  uniqueProjs.forEach(p => {
+    const isActive = currentFilterProjs.includes(p);
+    pills += `<div class="f-pill ${isActive ? 'active':''}" onclick="toggleProjFilter('${p}')">${p}</div>`;
+  });
+  document.getElementById('fProjPills').innerHTML = pills;
+}
+
+function toggleProjFilter(proj) {
+  if (proj === 'ALL') {
+    currentFilterProjs = [];
+  } else {
+    const idx = currentFilterProjs.indexOf(proj);
+    if (idx > -1) currentFilterProjs.splice(idx, 1);
+    else currentFilterProjs.push(proj);
+  }
+  updateViewerFilters();
+  renderViewer();
+}
+
+function renderViewer() {
+  const tl = document.getElementById('viewerTimeline');
+  const sDate = document.getElementById('fStartDate').value;
+  const eDate = document.getElementById('fEndDate').value;
+  
+  let filtered = worklogs.filter(w => {
+    // 1. 날짜 기간 필터 (빈 값이면 제한 없음)
+    if (sDate && w.date < sDate) return false;
+    if (eDate && w.date > eDate) return false;
+    // 2. 다중 사업 필터 (비어있으면 전체 허용)
+    if (currentFilterProjs.length > 0 && !currentFilterProjs.includes(w.project_id)) return false;
+    return true;
+  });
+
+  if(!filtered.length) { tl.innerHTML = '<div class="text-center text-slate-400 mt-12 text-[14px] font-bold opacity-60">해당 조건의 기록이 없습니다.</div>'; return; }
+
+  // 날짜별 내림차순 정렬
+  filtered.sort((a,b) => b.date.localeCompare(a.date));
+  
+  const groupedByDate = {};
+  filtered.forEach(w => {
+    if(!groupedByDate[w.date]) groupedByDate[w.date] = [];
+    groupedByDate[w.date].push(w);
+  });
+
+  let html = '';
+  for(let date in groupedByDate) {
+    const count = groupedByDate[date].length;
+    html += `
+      <div class="day-card">
+        <div class="day-date">
+          <span>${date.replace(/-/g, '.')}</span>
+          <span class="text-[12px] font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">${count} Items</span>
+        </div>
+        <div class="flex flex-col gap-2">
+    `;
+    groupedByDate[date].forEach(w => {
+      html += `
+        <div class="vl-item">
+          <span class="vl-proj">${w.project_id}</span>
+          <span class="vl-task">${w.task}</span>
+          <span class="ms vl-edit text-[20px]" onclick="openLogEdit('${w.id}')" title="수정/삭제">edit_square</span>
+        </div>
+      `;
+    });
+    html += `</div></div>`;
+  }
+  tl.innerHTML = html;
+}
+
+/* ── Modal CRUD (Viewer) ── */
+function openLogEdit(id) {
+  const w = worklogs.find(x => x.id === id);
+  if(!w) return;
+  document.getElementById('edId').value = w.id;
+  document.getElementById('edDate').value = w.date;
+  document.getElementById('edProj').value = w.project_id;
+  document.getElementById('edTask').value = w.task;
+  document.getElementById('editModal').classList.add('active');
+}
+function closeEdit() { document.getElementById('editModal').classList.remove('active'); }
+
+function saveEdit() {
+  const id = document.getElementById('edId').value;
+  const idx = worklogs.findIndex(x => x.id === id);
+  if(idx > -1) {
+    worklogs[idx].date = document.getElementById('edDate').value;
+    worklogs[idx].project_id = document.getElementById('edProj').value.trim();
+    worklogs[idx].task = document.getElementById('edTask').value.trim();
+    closeEdit(); renderViewer(); renderPreview();
+    updateViewerFilters(); // 사업명이 바뀌었을 수 있으므로 필터 재계산
+    commitToCloud(); // 수정은 확정 액션이므로 즉시 업로드
+  }
+}
+
+function deleteLog() {
+  const id = document.getElementById('edId').value;
+  if(confirm('이 기록을 영구 삭제하시겠습니까?')) {
+    worklogs = worklogs.filter(x => x.id !== id);
+    closeEdit(); renderViewer(); renderPreview();
+    updateViewerFilters();
+    commitToCloud(); // 삭제는 확정 액션이므로 즉시 업로드
+  }
+}
+
+/* ── DB Sync (Manual & Force) ── */
+function commitToCloud() {
+  if(!hasUnsavedChanges && !document.getElementById('editModal').classList.contains('active')) {
+    // 변경점이 없고, 모달에서의 강제 저장이 아닐 때 (선택적)
+  }
+  if(window.isSaving) return;
+  const payload = { action: 'write', sheetName: 'worklogs', data: worklogs.map((w, i) => ({ ...w, order: i + 1 })) };
+  document.getElementById('payload_input').value = JSON.stringify(payload);
+  
+  window.isSaving = true;
+  document.getElementById('syncDot').className = 'sync-dot syncing';
+  document.getElementById('syncText').textContent = 'DB 동기화 중...';
+  
+  document.getElementById('hidden_form').action = A_URL;
+  document.getElementById('hidden_form').submit();
+}
+
+function onSaveSuccess() {
+  window.isSaving = false;
+  hasUnsavedChanges = false;
+  document.getElementById('syncDot').className = 'sync-dot';
+  document.getElementById('syncText').textContent = 'DB 동기화 완료';
+  showToast("데이터베이스에 안전하게 저장되었습니다.");
+}
+
+function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+</script>
+</body>
+</html>
