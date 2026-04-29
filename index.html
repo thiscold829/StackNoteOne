@@ -182,8 +182,12 @@ async function loadDashboardData() {
     const modules = parseCSV(await mRes.text()) || [];
     
     renderTodos(todos);
-    renderDock(modules);
-  } catch(e) { console.error("Dashboard Load Error", e); }
+    // 숨김(is_hidden) 설정된 앱은 제외하고 독(Dock)에 표시합니다.
+    const visibleModules = modules.filter(m => String(m.is_hidden).toUpperCase() !== 'TRUE');
+    renderDock(visibleModules);
+  } catch(e) { 
+    console.error("Dashboard Load Error", e); 
+  }
 }
 
 function parseCSV(t){
