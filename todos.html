@@ -109,10 +109,10 @@ body::before {
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-btn"><span class="ms">arrow_back</span> 허브로 돌아가기</a>
+  <a href="index.html" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 허브로 돌아가기</a>
   <button class="btn-save-manual" id="saveBtn" onclick="forceManualSave()">
     <span class="ms text-[18px]" id="syncIcon">cloud_sync</span>
-    <span id="syncText">데이터베이스 동기화</span>
+    <span id="syncText">DB 업로드</span>
   </button>
 </nav>
 
@@ -219,7 +219,7 @@ function setSyncStatus(state) {
   } else {
     btn.classList.remove('syncing');
     ico.textContent = 'cloud_done'; ico.classList.remove('animate-spin');
-    txt.textContent = 'DB 동기화 완료';
+    txt.textContent = 'DB 업로드';
   }
 }
 
