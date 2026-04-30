@@ -21,11 +21,11 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; color: var(--ink); 
 
 /* Navigation */
 .nav { height: 60px; background: #fff; border-bottom: 1px solid var(--border-light); z-index: 100; display: flex; align-items: center; padding: 0 40px; justify-content: space-between;}
-.nav-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: 0.2s; text-decoration: none; border: 1px solid var(--border-light); }
-.nav-btn:hover { background: #f9fafb; color: var(--ink); }
+.nav-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s; text-decoration: none; }
+.nav-btn:hover { background: rgba(0,0,0,0.05); color: var(--ink); }
 
-.btn-manual-sync { background: var(--ink); color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-.btn-manual-sync:hover { background: #374151; }
+.btn-save-manual { display: flex; align-items: center; gap: 8px; background: var(--ink); color: #fff; padding: 8px 18px; border-radius: 99px; font-size: 12px; font-weight: 800; cursor: pointer; border: none; transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1); }
+.btn-save-manual:hover { transform: translateY(-1px); background: #334155; }
 
 .workspace { flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 32px 40px 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 32px; }
 .workspace::-webkit-scrollbar { display: none; }
@@ -92,15 +92,15 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; color: var(--ink); 
 
 <nav class="nav">
   <div class="flex items-center gap-6">
-    <a href="index.html" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 홈으로</a>
+    <a href="index.html" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 허브로 돌아가기</a>
     <div class="font-['Space_Grotesk'] font-black text-[18px] tracking-tighter">MEETING <span class="text-sky-500">ARCHIVE</span></div>
   </div>
   <div class="flex items-center gap-4">
     <div id="syncStatus" class="text-[12px] font-bold text-slate-400 flex items-center gap-2">
       <div class="w-2 h-2 rounded-full bg-emerald-500" id="syncDot"></div> 시스템 준비 완료
     </div>
-    <button class="btn-manual-sync" onclick="commitToCloud()">
-      <span class="ms text-[16px]">cloud_upload</span> DB 업로드
+    <button class="btn-save-manual" onclick="commitToCloud()">
+      <span class="ms text-[18px]">cloud_upload</span> DB 업로드
     </button>
   </div>
 </nav>
