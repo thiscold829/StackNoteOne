@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>내부메일 작성 - STACKNOTE ONE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL,GRAD@100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css"/>
+<script src="config.js"></script>
+<style>
+:root {
+  --ink: #111827; --ink-soft: #4b5563; --ink-mute: #9ca3af;
+  --bg-gradient: radial-gradient(1200px 800px at 50% 0%, #ffffff 0%, #f3f4f6 100%);
+  --border-light: rgba(0,0,0,0.08);
+}
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'Pretendard', -apple-system, sans-serif; color: var(--ink); display: flex; flex-direction: column; background: var(--bg-gradient); }
+.ms { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; display: inline-block; vertical-align: middle; line-height: 1; }
+
+/* Navigation */
+.nav { height: 60px; background: #fff; border-bottom: 1px solid var(--border-light); z-index: 100; display: flex; align-items: center; padding: 0 40px; justify-content: space-between;}
+.nav-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: 0.2s; text-decoration: none; border: 1px solid var(--border-light); }
+.nav-btn:hover { background: #f9fafb; color: var(--ink); }
+
+.workspace { flex: 1; max-width: 1600px; margin: 0 auto; width: 100%; padding: 24px 40px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; min-height: 0; }
+
+/* Left Section: Inputs */
+.input-panel { display: flex; flex-direction: column; gap: 20px; overflow-y: auto; padding-right: 4px; }
+.input-panel::-webkit-scrollbar { width: 4px; }
+.input-panel::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+.section-box { background: #fff; border-radius: 20px; padding: 24px; border: 1px solid var(--border-light); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+.section-label { font-size: 11px; font-weight: 900; color: var(--ink-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; display: block; }
+
+/* Title Builder */
+.title-builder { display: flex; align-items: center; gap: 10px; }
+.btn-urgent { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border-light); font-size: 13px; font-weight: 800; transition: 0.2s; background: #fff; }
+.btn-urgent.active { background: #fee2e2; color: #ef4444; border-color: #fca5a5; }
+.inp-select { background: #f9fafb; border: 1px solid var(--border-light); border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 800; outline: none; }
+.inp-text { flex: 1; border-bottom: 1.5px solid var(--ink-mute); font-size: 15px; font-weight: 800; outline: none; padding: 4px 0; transition: 0.2s; background: transparent; border-top: none; border-left: none; border-right: none;}
+.inp-text:focus { border-color: var(--ink); }
+
+/* Recipient Select */
+.rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Textareas */
+.work-textarea { width: 100%; height: 180px; background: #f9fafb; border: 1px solid var(--border-light); border-radius: 12px; padding: 16px; font-size: 14px; font-weight: 600; line-height: 1.6; outline: none; resize: none; transition: 0.2s; }
+.work-textarea:focus { background: #fff; border-color: var(--ink); }
+
+/* Right Section: Preview Canvas */
+.preview-panel { display: flex; flex-direction: column; background: #fff; border-radius: 24px; border: 1px solid var(--border-light); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); overflow: hidden; }
+.preview-header { height: 56px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; background: #fbfbfb; }
+.canvas-body { flex: 1; padding: 40px; overflow-y: auto; cursor: text; }
+.canvas-body::-webkit-scrollbar { width: 6px; }
+.canvas-body::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+
+/* Email Content Styling (Rendered) */
+.render-title { font-size: 18px; font-weight: 800; color: #000; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 24px; }
+.render-sec-title { font-size: 15px; font-weight: 800; color: #000; margin-top: 24px; margin-bottom: 8px; display: block; }
+.render-item { display: block; margin-left: 4px; color: #374151; line-height: 1.8; }
+
+.btn-copy-main { background: var(--ink); color: #fff; padding: 12px 32px; border-radius: 14px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: none; display: flex; align-items: center;}
+.btn-copy-main:hover { transform: translateY(-2px); background: #374151; }
+
+#toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 12px 28px; border-radius: 99px; font-size: 13px; font-weight: 800; opacity: 0; transition: all 0.4s; z-index: 10000; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(10px); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="flex items-center gap-6">
+    <a href="index.html" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 홈으로</a>
+    <div class="font-['Space_Grotesk'] font-black text-[18px] tracking-tighter">INTERNAL MAIL</span></div>
+  </div>
+  <div id="syncStatus" class="text-[12px] font-bold text-slate-400 flex items-center gap-2">
+    <div class="w-2 h-2 rounded-full bg-emerald-500"></div> 시스템 준비 완료
+  </div>
+</nav>
+
+<main class="workspace">
+  <section class="input-panel">
+    
+    <div class="section-box">
+      <span class="section-label">제목 구성</span>
+      <div class="title-builder mb-4">
+        <div class="btn-urgent" id="btnUrgent" onclick="toggleUrgent()">
+          <span class="ms text-[18px]">priority_high</span> 긴급
+        </div>
+        <select id="selProj" class="inp-select" onchange="render()"></select>
+        <input type="text" id="inpTitle" class="inp-text" placeholder="메일 제목을 입력하세요" oninput="render()">
+      </div>
+      <div class="rec-grid">
+        <div>
+          <span class="text-[11px] font-bold text-slate-400 ml-1">수신 (To)</span>
+          <select id="selTo" class="inp-select w-full mt-1" onchange="render()"></select>
+        </div>
+        <div>
+          <span class="text-[11px] font-bold text-slate-400 ml-1">참조 (Cc)</span>
+          <select id="selCc" class="inp-select w-full mt-1" onchange="render()"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-box">
+      <span class="section-label">금일 업무 및 검수 요청 사항</span>
+      <textarea id="areaInspection" class="work-textarea" placeholder="검수가 필요한 내용을 줄 단위로 입력하세요.&#10;(팁: 업무보고 내용을 그대로 붙여넣으셔도 좋습니다)" oninput="render()"></textarea>
+    </div>
+
+    <div class="section-box">
+      <span class="section-label">개발자 일정 조율 및 배정 요청</span>
+      <textarea id="areaRequest" class="work-textarea" placeholder="PM팀장님께 배정을 요청할 내용을 입력하세요." oninput="render()"></textarea>
+    </div>
+
+  </section>
+
+  <section class="preview-panel">
+    <div class="preview-header">
+      <span class="text-[11px] font-black text-slate-400 tracking-widest uppercase">Live Preview (For Outlook/Webmail)</span>
+      <button class="text-rose-500 font-bold text-[12px] hover:underline bg-transparent border-none cursor-pointer" onclick="clearAll()">초기화</button>
+    </div>
+    
+    <div class="canvas-body" id="mailCanvas" contenteditable="true">
+      </div>
+
+    <div class="p-6 border-t border-gray-100 flex justify-end">
+      <button class="btn-copy-main" onclick="copyRichText()">
+        <span class="ms text-[18px] mr-2">content_copy</span> 본문 복사하기
+      </button>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+// 환경설정 앱에서 세팅한 값(localStorage)을 최우선으로 가져오도록 연동 완료
+const S_ID = localStorage.getItem('CUSTOM_SHEET_ID') || (typeof CONFIG !== 'undefined' ? CONFIG.SHEET_ID : '16izs14p3VvDfojdBR2Q3Qwty6wHZiRqNbnQ8PxS9eOY');
+
+let members = [], projects = [];
+let isUrgent = false;
+
+window.onload = async () => {
+  try {
+    const [mRes, pRes] = await Promise.all([
+      fetch(`https://docs.google.com/spreadsheets/d/${S_ID}/gviz/tq?tqx=out:csv&sheet=members`),
+      fetch(`https://docs.google.com/spreadsheets/d/${S_ID}/gviz/tq?tqx=out:csv&sheet=projects`)
+    ]);
+    members = parseCSV(await mRes.text()) || [];
+    projects = parseCSV(await pRes.text()) || [];
+    initUI();
+  } catch(e) { console.error(e); }
+};
+
+function parseCSV(t){
+  const lines=t.trim().split('\n'); if(lines.length<2) return [];
+  const hdrs=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map(l=>{
+    const v=[]; let c='', q=false;
+    for(let i=0; i<l.length; i++){ const ch=l[i]; if(ch==='"') q=!q; else if(ch===','&&!q){v.push(c.trim());c='';} else c+=ch; }
+    v.push(c.trim()); const o={}; hdrs.forEach((h,i)=>o[h]=(v[i]||'').replace(/^"|"$/g,'')); return o;
+  });
+}
+
+function initUI() {
+  document.getElementById('selProj').innerHTML = '<option value="">사업선택</option>' + projects.map(p=>`<option value="${p.short_name}">${p.short_name}</option>`).join('');
+  const mOptions = '<option value="">미선택</option>' + members.map(m=>`<option value="${m.abbr}">${m.abbr} (${m.name} ${m.rank})</option>`).join('');
+  document.getElementById('selTo').innerHTML = mOptions;
+  document.getElementById('selCc').innerHTML = mOptions;
+  render();
+}
+
+function toggleUrgent() {
+  isUrgent = !isUrgent;
+  document.getElementById('btnUrgent').classList.toggle('active', isUrgent);
+  render();
+}
+
+function clearAll() {
+  if(confirm('모든 입력 내용을 초기화할까요?')) {
+    document.getElementById('inpTitle').value = '';
+    document.getElementById('areaInspection').value = '';
+    document.getElementById('areaRequest').value = '';
+    render();
+  }
+}
+
+function render() {
+  const canvas = document.getElementById('mailCanvas');
+  const proj = document.getElementById('selProj').value;
+  const title = document.getElementById('inpTitle').value;
+  const toAbbr = document.getElementById('selTo').value;
+  const ccAbbr = document.getElementById('selCc').value;
+  
+  const toInfo = members.find(m => m.abbr === toAbbr);
+  const ccInfo = members.find(m => m.abbr === ccAbbr);
+
+  // 1. 제목 조립
+  let finalTitle = `${isUrgent ? '(급) ' : ''}${proj ? '['+proj+'] ' : ''}${title || '메일 제목을 입력하세요'}`;
+
+  // 2. 본문 조립
+  let bodyHtml = `<div class="render-title">${finalTitle}</div>`;
+  
+  // 인사말
+  if(toInfo) {
+    let greeting = `<b>${toInfo.name} ${toInfo.rank}님</b>`;
+    if(ccInfo) greeting += `, <b>${ccInfo.name} ${ccInfo.rank}님</b>`;
+    bodyHtml += `<div>${greeting}, 안녕하십니까. 이찬 책임입니다.</div>`;
+  } else {
+    bodyHtml += `<div>팀장님/PM님, 안녕하십니까.</div>`;
+  }
+  bodyHtml += `<div>금일 업무 내역 공유 및 개발 배정 요청 드립니다.</div>`;
+
+  // 섹션 1: 검수
+  const insText = document.getElementById('areaInspection').value.trim();
+  if(insText) {
+    bodyHtml += `<span class="render-sec-title">■ 금일 업무 진행 및 검수 요청 내역</span>`;
+    insText.split('\n').forEach(line => {
+      if(line.trim()) bodyHtml += `<span class="render-item">- ${line.trim()}</span>`;
+    });
+  }
+
+  // 섹션 2: 요청
+  const reqText = document.getElementById('areaRequest').value.trim();
+  if(reqText) {
+    bodyHtml += `<span class="render-sec-title">■ 개발자 일정 조율 및 배정 요청 내역</span>`;
+    reqText.split('\n').forEach(line => {
+      if(line.trim()) bodyHtml += `<span class="render-item">- ${line.trim()}</span>`;
+    });
+  }
+
+  bodyHtml += `<div style="margin-top:24px;">확인 요청드립니다.</div>`;
+  canvas.innerHTML = bodyHtml;
+}
+
+async function copyRichText() {
+  const canvas = document.getElementById('mailCanvas');
+  
+  // 아웃룩 호환성을 위한 인라인 스타일 변환
+  const html = `
+    <div style="font-family: 'Malgun Gothic', 'Dotum', sans-serif; font-size: 14px; line-height: 1.6; color: #333;">
+      ${canvas.innerHTML}
+    </div>
+  `;
+
+  try {
+    const blob = new Blob([html], { type: 'text/html' });
+    const data = [new ClipboardItem({ 'text/html': blob, 'text/plain': new Blob([canvas.innerText], { type: 'text/plain' }) })];
+    await navigator.clipboard.write(data);
+    showToast("본문이 서식 포함 복사되었습니다! 🚀");
+  } catch (err) {
+    console.error(err);
+    showToast("복사 실패. 브라우저 설정을 확인하세요.");
+  }
+}
+
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
