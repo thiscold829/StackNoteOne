@@ -95,10 +95,10 @@ body::before {
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-btn"><span class="ms text-[18px]">arrow_back</span> 허브</a>
+  <a href="index.html" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 허브로 돌아가기</a>
   <button class="btn-save-manual" id="saveBtn" onclick="forceManualSave()">
-    <div class="sync-dot" id="syncDot"></div>
-    <span id="syncText">DB 동기화 완료</span>
+    <span class="ms text-[18px]" id="syncIcon">cloud_upload</span>
+    <span id="syncText">DB 업로드</span>
   </button>
 </nav>
 
@@ -227,7 +227,8 @@ function commitToCloud() {
   const payload = { action: 'write', sheetName: 'projects', data: projects.map((p, i) => ({ ...p, order: i + 1 })) };
   document.getElementById('payload_input').value = JSON.stringify(payload);
   window.isSaving = true;
-  document.getElementById('syncDot').classList.add('syncing');
+  document.getElementById('syncIcon').textContent = 'sync';
+  document.getElementById('syncIcon').classList.add('animate-spin');
   document.getElementById('syncText').textContent = '동기화 중...';
   document.getElementById('hidden_form').action = A_URL;
   document.getElementById('hidden_form').submit();
@@ -235,8 +236,9 @@ function commitToCloud() {
 
 function onSaveSuccess() {
   window.isSaving = false;
-  document.getElementById('syncDot').classList.remove('syncing');
-  document.getElementById('syncText').textContent = 'DB 동기화 완료';
+  document.getElementById('syncIcon').textContent = 'cloud_upload';
+  document.getElementById('syncIcon').classList.remove('animate-spin');
+  document.getElementById('syncText').textContent = 'DB 업로드';
 }
 
 function forceManualSave() { commitToCloud(); }
