@@ -66,7 +66,6 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-i
 .filter-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; background: #fff; padding: 12px 24px; border-radius: 24px; border: 1px solid rgba(0,0,0,0.04); }
 .f-pill { padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 800; background: transparent; color: var(--ink-mute); cursor: pointer; border: 1px solid rgba(0,0,0,0.05); transition: 0.2s; flex-shrink: 0; white-space: nowrap; }
 .f-pill.active { background: var(--ink); color: #fff; border-color: var(--ink); }
-/* [수술 완료] 필터 컨테이너 분리 및 가로 스크롤 허용 (레이아웃 찌그러짐 방지) */
 .pills-container { display: flex; gap: 8px; flex: 1; border-left: 1px solid rgba(0,0,0,0.05); padding-left: 16px; margin-left: 8px; overflow-x: auto; scrollbar-width: none; }
 .pills-container::-webkit-scrollbar { display: none; }
 
@@ -95,6 +94,23 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-i
 
 #toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 12px 28px; border-radius: 99px; font-size: 13px; font-weight: 800; opacity: 0; transition: all 0.4s; z-index: 10000; box-shadow: 0 10px 24px rgba(0,0,0,0.15); }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(10px); }
+
+/* --- [수술 완료] 레이아웃 및 텍스트 겹침 방지 --- */
+.f-pill, .t-proj, .badge-biz, .biz-pill {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+}
+
+.task-txt, .log-item span, .task-text, .todo-card > span.truncate {
+    word-break: break-all !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+}
+
+.timeline-scroll, .list-pool, .todo-scroll {
+    min-height: 0 !important;
+    overflow-y: auto !important;
+}
 </style>
 </head>
 <body>
@@ -178,7 +194,7 @@ const S_ID = typeof CONFIG !== 'undefined' ? CONFIG.SHEET_ID : '16izs14p3VvDfojd
 const A_URL = typeof CONFIG !== 'undefined' ? CONFIG.API_URL : 'https://script.google.com/macros/s/AKfycbz6QmihPORS0zp7Z9KPcHfAOVqGYlUVAl982rPZEW3sUcBtpe8OJDMxwrT67pA4ogO9/exec';
 
 let projects = [], todos = [], worklogs = [], currentFilterProjs = [];
-let activeLogDate = ''; // 활성화된 날짜 상태 관리
+let activeLogDate = '';
 
 window.onload = () => {
   activeLogDate = new Date().toISOString().split('T')[0];
@@ -224,7 +240,6 @@ function switchTab(t) {
 }
 
 function refreshAll() { 
-  // 날짜 변경 시 이전 텍스트 박스 내용을 내부 DB에 보존
   if(document.getElementById('viewWrite').style.display !== 'none') {
     syncTodayFromTextarea(activeLogDate);
   }
@@ -232,11 +247,8 @@ function refreshAll() {
   renderTodos(); renderPreview(); 
 }
 
-/* --- [수술 완료] 양방향 파싱 엔진 (Textarea -> Array) --- */
 function syncTodayFromTextarea(targetDate) {
   const text = document.getElementById('previewText').value;
-  
-  // 글로벌 worklogs에서 타겟 날짜의 기록을 모두 지움 (새로 덮어쓰기 위함)
   worklogs = worklogs.filter(w => w.date !== targetDate);
   
   if (!text.trim()) return;
@@ -248,23 +260,19 @@ function syncTodayFromTextarea(targetDate) {
     let s = line.trim();
     if (!s) return;
     
-    // [사업명] 패턴 매칭
     if (s.startsWith('[') && s.endsWith(']')) {
       currentProj = s.slice(1, -1).trim();
     } else {
-      // 업무 내용 매칭
       let task = s;
-      if (task.startsWith('-')) task = task.slice(1).trim(); // 앞에 '-' 제거
+      if (task.startsWith('-')) task = task.slice(1).trim();
       
       let details = '';
-      // 가장 마지막에 위치한 (관계 및 비고 내용) 추출 정규식
-      const match = task.match(/(.*)\(([^)]+)\)$/);
-      if (match) {
-        task = match[1].trim();
-        details = match[2].trim();
+      const lastParen = task.lastIndexOf('(');
+      if (lastParen !== -1 && task.endsWith(')')) {
+        details = task.slice(lastParen + 1, -1).trim();
+        task = task.slice(0, lastParen).trim();
       }
       
-      // 고유 난수 ID 생성 후 삽입
       worklogs.push({
         id: 'w_' + Date.now() + Math.random().toString(36).substr(2, 5),
         date: targetDate,
@@ -276,7 +284,6 @@ function syncTodayFromTextarea(targetDate) {
   });
 }
 
-/* --- Writer Logic --- */
 function renderTodos() {
   const pool = document.getElementById('todoPool');
   const list = todos.filter(t => t.task && String(t.is_done).toUpperCase() !== 'TRUE');
@@ -285,7 +292,7 @@ function renderTodos() {
   pool.innerHTML = list.map(t => `
     <div class="todo-card" onclick="addWorklog('${t.project_id}', '${t.task.replace(/'/g,"\\'")}')">
       <span class="t-proj">${t.project_id || '기타'}</span>
-      <span class="flex-1 font-bold text-[13px] text-slate-600 truncate">${t.task}</span>
+      <span class="flex-1 font-bold text-[13px] text-slate-600 truncate task-text">${t.task}</span>
       <span class="ms text-slate-300">add_circle</span>
     </div>
   `).join('');
@@ -301,9 +308,7 @@ function addLogManual() {
 }
 
 function addWorklog(p, t, d = '') {
-  // 새 항목을 추가하기 전에 기존에 타이핑 중이던 내용을 먼저 파싱하여 보존합니다.
   syncTodayFromTextarea(activeLogDate);
-  
   worklogs.push({ id: 'w_'+Date.now()+Math.random().toString(36).substr(2, 5), date: activeLogDate, project_id: p||'기타', task: t, details: d });
   markUnsaved(); renderPreview();
 }
@@ -321,7 +326,6 @@ function renderPreview() {
   document.getElementById('previewText').value = txt.trim();
 }
 
-/* --- Viewer Grouping & Sorting Logic --- */
 function groupLogs(logs) {
   const map = {};
   logs.forEach(w => {
@@ -330,9 +334,15 @@ function groupLogs(logs) {
   });
   
   return Object.keys(map).sort((a,b) => {
-    const pA = projects.find(p=>p.short_name === a), pB = projects.find(p=>p.short_name === b);
-    return (pA ? Number(pA.order) : 999) - (pB ? Number(pB.order) : 999);
-  }).map(proj => ({ proj, items: map[proj] }));
+    let idxA = projects.findIndex(p => p.short_name === a);
+    let idxB = projects.findIndex(p => p.short_name === b);
+    idxA = idxA === -1 ? 999 : idxA;
+    idxB = idxB === -1 ? 999 : idxB;
+    return idxA - idxB;
+  }).map(proj => {
+    map[proj].sort((itemA, itemB) => (itemA.task || '').localeCompare(itemB.task || ''));
+    return { proj, items: map[proj] };
+  });
 }
 
 function renderViewer() {
@@ -349,19 +359,27 @@ function renderViewer() {
   if(!filtered.length) { tl.innerHTML = '<div class="text-center text-slate-400 mt-12 font-bold opacity-60">기록이 없습니다.</div>'; return; }
 
   const dates = [...new Set(filtered.map(w => w.date))].sort((a,b) => b.localeCompare(a));
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
   let html = '';
   
   dates.forEach(date => {
     const dayLogs = filtered.filter(w => w.date === date);
     const grouped = groupLogs(dayLogs);
     
-    // [수술 완료] 날짜 정보 파싱하여 요일(월) 추출 (UTC 타임존 버그 완벽 회피)
+    // [수술 완료] 타임존 및 오차 없는 명시적 요일(월) 추출
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
     let dayStr = '';
-    const parts = date.split(/[-.\/]/);
-    if(parts.length === 3) {
-      const dObj = new Date(parts[0], parts[1]-1, parts[2]);
-      if(!isNaN(dObj)) dayStr = `(${dayNames[dObj.getDay()]})`;
+    if(date) {
+      const cleanDate = String(date).substring(0, 10); 
+      const parts = cleanDate.split(/[-.\/]/);
+      if(parts.length >= 3) {
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const d = parseInt(parts[2], 10);
+        const dObj = new Date(y, m, d);
+        if(!isNaN(dObj.getDay())) {
+          dayStr = `(${dayNames[dObj.getDay()]})`;
+        }
+      }
     }
     
     html += `<div class="day-card">
@@ -387,9 +405,9 @@ function renderViewer() {
   tl.innerHTML = html;
 }
 
-/* --- CRUD & Sync --- */
 function openEdit(id) {
-  const w = worklogs.find(x => x.id === id);
+  const w = worklogs.find(x => String(x.id) === String(id));
+  if(!w) return;
   document.getElementById('edId').value = w.id; document.getElementById('edDate').value = w.date;
   document.getElementById('edProj').value = w.project_id; document.getElementById('edTask').value = w.task;
   document.getElementById('edDetail').value = w.details || '';
@@ -398,18 +416,22 @@ function openEdit(id) {
 function closeEdit() { document.getElementById('editModal').classList.remove('active'); }
 
 function saveEdit() {
-  const idx = worklogs.findIndex(x => x.id === document.getElementById('edId').value);
-  worklogs[idx] = { 
-    id: document.getElementById('edId').value, date: document.getElementById('edDate').value,
-    project_id: document.getElementById('edProj').value.trim(), task: document.getElementById('edTask').value.trim(),
-    details: document.getElementById('edDetail').value.trim()
-  };
-  closeEdit(); renderViewer(); renderPreview(); commitToCloud(); // 모달 에디트는 즉시 저장
+  const id = document.getElementById('edId').value;
+  const idx = worklogs.findIndex(x => String(x.id) === String(id));
+  if(idx > -1) {
+    worklogs[idx] = { 
+      id: id, date: document.getElementById('edDate').value,
+      project_id: document.getElementById('edProj').value.trim(), task: document.getElementById('edTask').value.trim(),
+      details: document.getElementById('edDetail').value.trim()
+    };
+    closeEdit(); renderViewer(); renderPreview(); commitToCloud();
+  }
 }
 
 function deleteLog() {
   if(confirm('이 기록을 영구 삭제하시겠습니까?')) {
-    worklogs = worklogs.filter(x => x.id !== document.getElementById('edId').value);
+    const id = document.getElementById('edId').value;
+    worklogs = worklogs.filter(x => String(x.id) !== String(id));
     closeEdit(); renderViewer(); renderPreview(); commitToCloud();
   }
 }
@@ -417,7 +439,6 @@ function deleteLog() {
 function commitToCloud() {
   if(window.isSaving) return;
   
-  // 저장 버튼을 누를 때 작성창의 현재 타이핑 내용을 최종 파싱하여 DB 덮어쓰기
   if(document.getElementById('viewWrite').style.display !== 'none') {
     syncTodayFromTextarea(activeLogDate);
   }
@@ -449,7 +470,7 @@ function toggleF(p) {
 }
 function markUnsaved() { document.getElementById('syncDot').className = 'sync-dot unsaved'; document.getElementById('syncText').textContent = '저장 대기 중'; }
 function copyReport() { 
-  syncTodayFromTextarea(activeLogDate); // 복사 직전에도 파싱
+  syncTodayFromTextarea(activeLogDate);
   renderPreview();
   navigator.clipboard.writeText(document.getElementById('previewText').value).then(() => showToast("클립보드에 복사되었습니다.")); 
 }
