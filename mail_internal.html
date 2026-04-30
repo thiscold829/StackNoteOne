@@ -21,8 +21,8 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; color: var(--ink); 
 
 /* Navigation */
 .nav { height: 60px; background: #fff; border-bottom: 1px solid var(--border-light); z-index: 100; display: flex; align-items: center; padding: 0 40px; justify-content: space-between;}
-.nav-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: 0.2s; text-decoration: none; border: 1px solid var(--border-light); }
-.nav-btn:hover { background: #f9fafb; color: var(--ink); }
+.nav-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s; text-decoration: none; }
+.nav-btn:hover { background: rgba(0,0,0,0.05); color: var(--ink); }
 
 .workspace { flex: 1; max-width: 1600px; margin: 0 auto; width: 100%; padding: 24px 40px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; min-height: 0; }
 
@@ -72,7 +72,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; color: var(--ink); 
 
 <nav class="nav">
   <div class="flex items-center gap-6">
-    <a href="index.html" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 홈으로</a>
+    <a href="index.html" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 허브로 돌아가기</a>
     <div class="font-['Space_Grotesk'] font-black text-[18px] tracking-tighter">INTERNAL MAIL</span></div>
   </div>
   <div id="syncStatus" class="text-[12px] font-bold text-slate-400 flex items-center gap-2">
