@@ -40,7 +40,7 @@ body::before {
 .btn-save-manual:hover { transform: translateY(-1px); background: #334155; }
 .btn-save-manual.syncing { background: #3b82f6; cursor: wait; }
 
-/* [수술 1] Workspace: min-height: 0 을 주어 자식 요소의 스크롤을 활성화 */
+/* Workspace: min-height: 0 을 주어 자식 요소의 스크롤을 활성화 */
 .workspace { flex: 1; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; width: 100%; padding: 24px 40px 40px; min-height: 0; }
 
 /* Input Dock */
@@ -70,7 +70,7 @@ body::before {
 .tab.active { color: var(--ink); }
 .tab.active::after { content: ''; position: absolute; bottom: -8px; left: 0; width: 100%; height: 2px; background: var(--ink); }
 
-/* [수술 1] List Pool: overflow-y: auto 가 정상 작동하도록 설정 */
+/* List Pool: overflow-y: auto 가 정상 작동하도록 설정 */
 .list-pool { 
   flex: 1; background: var(--pool-inner); border-radius: 32px; padding: 28px; overflow-y: auto; 
   box-shadow: inset 0 12px 24px -8px rgba(15,23,42,0.12), inset 0 2px 4px rgba(0,0,0,0.02);
@@ -230,15 +230,14 @@ function forceManualSave() {
 function commitToCloud() {
   if(window.isSaving) return;
   
-  // [수술 2] 순서 재할당 (DB 증발 버그 원천 차단)
-  const safeTodos = todos.map((t, i) => ({
+  // [수술] order 제거 및 정확한 6개 컬럼 매핑
+  const safeTodos = todos.map(t => ({
     id: t.id || '',
     task: t.task || '',
     project_id: t.project_id || '',
     deadline: t.deadline || '',
     is_done: t.is_done || 'FALSE',
-    memo: t.memo || '',
-    order: i + 1
+    memo: t.memo || ''
   }));
 
   const payload = { action: 'write', sheetName: 'todos', data: safeTodos };
@@ -272,8 +271,14 @@ function renderTodos() {
   });
 
   sortedKeys.forEach(k => {
-    // 항목별 정렬 (가까운 날짜 순)
-    grouped[k].sort((a,b) => (a.deadline||'9999').localeCompare(b.deadline||'9999'));
+    // [수술] 항목별 정렬: 가까운 날짜 순 -> 같으면 가나다 순
+    grouped[k].sort((a,b) => {
+      let dA = a.deadline || '9999-99-99';
+      let dB = b.deadline || '9999-99-99';
+      if(dA !== dB) return dA.localeCompare(dB);
+      return (a.task || '').localeCompare(b.task || '');
+    });
+
     html += `<div class="group-header"><span class="group-label">${k}</span><div class="group-line"></div></div>`;
     grouped[k].forEach(t => {
       const isOver = t.deadline && t.deadline <= today && currentTab === 'active';
@@ -299,8 +304,8 @@ function addTodo() {
     task: t, 
     deadline: document.getElementById('inDate').value, 
     is_done: 'FALSE', 
-    memo: '', 
-    order: todos.length + 1
+    memo: ''
+    // order 제거
   });
   document.getElementById('inTask').value=''; renderTodos(); triggerAutoSave(true);
 }
@@ -311,20 +316,20 @@ function toggleDone(id) {
   renderTodos(); triggerAutoSave(true); 
 }
 
-/* [수술 3] 메모 파싱 - 화면에 뿌릴 땐 줄바꿈으로 복원 */
+/* 메모 파싱 - 화면에 뿌릴 땐 줄바꿈으로 복원 */
 function openEdit(id) {
   const t = todos.find(x=>x.id===id);
   document.getElementById('edId').value = t.id; 
   document.getElementById('edProj').value = t.project_id || ''; 
   document.getElementById('edTask').value = t.task; 
   document.getElementById('edDate').value = t.deadline || ''; 
-  document.getElementById('edMemo').value = (t.memo || '').replace(/↵/g, '\n'); // CSV 호환 기호(↵)를 줄바꿈으로 변경
+  document.getElementById('edMemo').value = (t.memo || '').replace(/↵/g, '\n'); 
   document.getElementById('editModal').classList.add('active');
 }
 
 function closeEdit() { document.getElementById('editModal').classList.remove('active'); }
 
-/* [수술 2 & 3] 데이터 교체 시 객체 온전성 유지 및 특수문자 치환 */
+/* 데이터 교체 시 객체 온전성 유지 및 특수문자 치환 */
 function saveEdit() {
   const id = document.getElementById('edId').value; 
   const idx = todos.findIndex(x=>x.id===id);
@@ -335,8 +340,8 @@ function saveEdit() {
       project_id: document.getElementById('edProj').value.trim(),
       deadline: document.getElementById('edDate').value,
       is_done: todos[idx].is_done, // 기존 상태 유지
-      memo: document.getElementById('edMemo').value.replace(/\n/g, '↵'), // 줄바꿈을 특수기호로 치환하여 통신 오류 방지
-      order: todos[idx].order || 0
+      memo: document.getElementById('edMemo').value.replace(/\n/g, '↵') // 줄바꿈 치환
+      // order 제거
     };
     closeEdit(); renderTodos(); triggerAutoSave(true);
   }
