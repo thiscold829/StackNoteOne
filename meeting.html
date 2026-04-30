@@ -306,7 +306,7 @@ function renderList() {
   pool.innerHTML = html;
 }
 
-/* --- Editor Logic (Page View) --- */
+/* --- [수술 완료] Editor Logic --- */
 function openEditor(id) {
   document.getElementById('viewList').style.display = 'none';
   document.getElementById('viewEditor').style.display = 'flex';
@@ -317,7 +317,6 @@ function openEditor(id) {
   document.getElementById('edDate').value = now.toISOString().slice(0,16);
   document.getElementById('edProj').value = '';
   document.getElementById('edTitle').value = '';
-  document.getElementById('edExt').value = '';
   document.getElementById('edNote').value = '';
   document.getElementById('edActions').value = '';
   document.getElementById('edTrans').value = '';
@@ -329,9 +328,10 @@ function openEditor(id) {
     document.getElementById('edDate').value = m.date;
     document.getElementById('edProj').value = m.project_id;
     document.getElementById('edTitle').value = m.title;
-    document.getElementById('edNote').value = m.note || '';
-    document.getElementById('edActions').value = m.actions || '';
-    document.getElementById('edTrans').value = m.transcript || '';
+    // 줄바꿈 특수기호(↵)를 정상 줄바꿈(\n)으로 파싱 복원
+    document.getElementById('edNote').value = (m.note || '').replace(/↵/g, '\n');
+    document.getElementById('edActions').value = (m.actions || '').replace(/↵/g, '\n');
+    document.getElementById('edTrans').value = (m.transcript || '').replace(/↵/g, '\n');
     
     let pStr = m.participants || "";
     let inMatch = pStr.match(/\[내부\](.*?)(?=\| \[외부\]|$)/);
@@ -368,9 +368,10 @@ function saveMeeting() {
     project_id: document.getElementById('edProj').value,
     title: document.getElementById('edTitle').value.trim(),
     participants: pStr,
-    note: document.getElementById('edNote').value,
-    actions: document.getElementById('edActions').value,
-    transcript: document.getElementById('edTrans').value
+    // [수술 완료] 배열 파괴를 막기 위해 줄바꿈(\n)을 특수기호(↵)로 안전하게 치환 후 저장
+    note: document.getElementById('edNote').value.replace(/\n/g, '↵'),
+    actions: document.getElementById('edActions').value.replace(/\n/g, '↵'),
+    transcript: document.getElementById('edTrans').value.replace(/\n/g, '↵')
   };
 
   if(!mData.title) { alert('회의 제목을 입력해주세요.'); return; }
@@ -382,7 +383,6 @@ function saveMeeting() {
   closeEditor(); 
   renderList();
   
-  // [수술 완료] 임시 저장 후 즉시 자동 업로드 트리거 작동
   commitToCloud();
 }
 
@@ -393,7 +393,7 @@ function deleteMeeting() {
     meetings = meetings.filter(x => x.id !== id);
     closeEditor(); 
     renderList(); 
-    commitToCloud(); // 자동 삭제 동기화 유지
+    commitToCloud();
   }
 }
 
