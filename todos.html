@@ -328,7 +328,7 @@ function openEdit(id) {
   document.getElementById('edProj').value = t.project_id || ''; 
   document.getElementById('edTask').value = t.task; 
   document.getElementById('edDate').value = t.deadline || ''; 
-  document.getElementById('edMemo').value = (t.memo || '').replace(/↵/g, '\n'); 
+  document.getElementById('edMemo').value = (t.memo || '').replace(/\\n/g, '\n').replace(/↵/g, '\n');
   document.getElementById('editModal').classList.add('active');
 }
 
@@ -344,7 +344,7 @@ function saveEdit() {
       project_id: document.getElementById('edProj').value.trim(),
       deadline: document.getElementById('edDate').value,
       is_done: todos[idx].is_done,
-      memo: document.getElementById('edMemo').value.replace(/\n/g, '↵')
+      memo: document.getElementById('edMemo').value.replace(/\n/g, '\\n')
     };
     closeEdit(); renderTodos(); triggerAutoSave(true);
   }
