@@ -1,7 +1,7 @@
 <script>
-// [수술 완료] 브라우저 로컬 스토리지 하이재킹 원천 차단 (config.js 최우선 순위 강제 적용)
-const S_ID = (typeof CONFIG !== 'undefined' && CONFIG.SHEET_ID) ? CONFIG.SHEET_ID : (localStorage.getItem('CUSTOM_SHEET_ID') || '16izs14p3VvDfojdBR2Q3Qwty6wHZiRqNbnQ8PxS9eOY');
-const A_URL = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : (localStorage.getItem('CUSTOM_API_URL') || 'https://script.google.com/macros/s/AKfycbz6QmihPORS0zp7Z9KPcHfAOVqGYlUVAl982rPZEW3sUcBtpe8OJDMxwrT67pA4ogO9/exec');
+// [수술 1] 정상 작동 중인 다른 모듈과 동일한 Config 규칙 강제 (로컬 스토리지 간섭 완벽 차단)
+const S_ID = typeof CONFIG !== 'undefined' ? CONFIG.SHEET_ID : '16izs14p3VvDfojdBR2Q3Qwty6wHZiRqNbnQ8PxS9eOY';
+const A_URL = typeof CONFIG !== 'undefined' ? CONFIG.API_URL : 'https://script.google.com/macros/s/AKfycbz6QmihPORS0zp7Z9KPcHfAOVqGYlUVAl982rPZEW3sUcBtpe8OJDMxwrT67pA4ogO9/exec';
 
 let projects = [], members = [], meetings = [];
 
@@ -109,27 +109,30 @@ function openEditor(id) {
   document.querySelectorAll('.mem-chk').forEach(cb => cb.checked = false);
 
   if(id) {
-    const m = meetings.find(x => x.id === id);
-    document.getElementById('edId').value = m.id;
-    document.getElementById('edDate').value = m.date;
-    document.getElementById('edProj').value = m.project_id;
-    document.getElementById('edTitle').value = m.title;
-    document.getElementById('edNote').value = (m.note || '').replace(/↵/g, '\n');
-    document.getElementById('edActions').value = (m.actions || '').replace(/↵/g, '\n');
-    document.getElementById('edTrans').value = (m.transcript || '').replace(/↵/g, '\n');
-    
-    let pStr = m.participants || "";
-    let inMatch = pStr.match(/\[내부\](.*?)(?=\| \[외부\]|$)/);
-    let extMatch = pStr.match(/\[외부\](.*)/);
-    
-    if(inMatch && inMatch[1]) {
-      let inList = inMatch[1].split(',').map(s=>s.trim());
-      inList.forEach(pt => {
-        document.querySelectorAll('.mem-chk').forEach(cb => { if(cb.value === pt) cb.checked = true; });
-      });
-    }
-    if(extMatch && extMatch[1]) {
-      document.getElementById('edExt').value = extMatch[1].trim();
+    // 식별자 대소문자 호환을 위한 매핑
+    const m = meetings.find(x => String(x.id||x.ID) === String(id));
+    if(m) {
+      document.getElementById('edId').value = m.id || m.ID;
+      document.getElementById('edDate').value = m.date || m.Date || '';
+      document.getElementById('edProj').value = m.project_id || m.Project_id || m['Project ID'] || '';
+      document.getElementById('edTitle').value = m.title || m.Title || '';
+      document.getElementById('edNote').value = (m.note || m.Note || '').replace(/↵/g, '\n');
+      document.getElementById('edActions').value = (m.actions || m.Actions || '').replace(/↵/g, '\n');
+      document.getElementById('edTrans').value = (m.transcript || m.Transcript || '').replace(/↵/g, '\n');
+      
+      let pStr = m.participants || m.Participants || "";
+      let inMatch = pStr.match(/\[내부\](.*?)(?=\| \[외부\]|$)/);
+      let extMatch = pStr.match(/\[외부\](.*)/);
+      
+      if(inMatch && inMatch[1]) {
+        let inList = inMatch[1].split(',').map(s=>s.trim());
+        inList.forEach(pt => {
+          document.querySelectorAll('.mem-chk').forEach(cb => { if(cb.value === pt) cb.checked = true; });
+        });
+      }
+      if(extMatch && extMatch[1]) {
+        document.getElementById('edExt').value = extMatch[1].trim();
+      }
     }
   }
 }
@@ -160,7 +163,7 @@ function saveMeeting() {
 
   if(!mData.title) { alert('회의 제목을 입력해주세요.'); return; }
 
-  const idx = meetings.findIndex(x => x.id === id);
+  const idx = meetings.findIndex(x => String(x.id||x.ID) === String(id));
   if(idx > -1) meetings[idx] = mData;
   else meetings.push(mData);
 
@@ -174,7 +177,7 @@ function deleteMeeting() {
   const id = document.getElementById('edId').value;
   if(!id) { closeEditor(); return; }
   if(confirm("이 회의 기록을 완전히 삭제하시겠습니까? (전문 포함)")) {
-    meetings = meetings.filter(x => x.id !== id);
+    meetings = meetings.filter(x => String(x.id||x.ID) !== String(id));
     closeEditor(); 
     renderList(); 
     commitToCloud();
@@ -206,7 +209,21 @@ function replaceTrans(all) {
 /* --- Sync & Toast --- */
 function commitToCloud() {
   if(window.isSaving) return;
-  const payload = { action: 'write', sheetName: 'meetings', data: meetings };
+  
+  // [수술 2] 할 일(todos) 모듈에서 대성공했던 'Safe Mapping' 필터 이식
+  // 시트의 헤더가 미세하게 틀려도 강제로 규격에 맞춰 DB 쓰기 증발을 원천 차단합니다.
+  const safeMeetings = meetings.map(m => ({
+    id: m.id || m.ID || '',
+    date: m.date || m.Date || '',
+    project_id: m.project_id || m.Project_id || m['Project ID'] || '',
+    title: m.title || m.Title || '',
+    participants: m.participants || m.Participants || '',
+    note: m.note || m.Note || '',
+    actions: m.actions || m.Actions || '',
+    transcript: m.transcript || m.Transcript || ''
+  }));
+
+  const payload = { action: 'write', sheetName: 'meetings', data: safeMeetings };
   document.getElementById('payload_input').value = JSON.stringify(payload);
   
   window.isSaving = true;
