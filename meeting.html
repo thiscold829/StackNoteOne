@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>회의 관리 - STACKNOTE ONE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL,GRAD@100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css"/>
+<script src="config.js"></script>
+<style>
+:root {
+  --ink: #111827; --ink-soft: #4b5563; --ink-mute: #9ca3af;
+  --bg-gradient: radial-gradient(1200px 800px at 50% 0%, #ffffff 0%, #f3f4f6 100%);
+  --border-light: rgba(0,0,0,0.08);
+}
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'Pretendard', -apple-system, sans-serif; color: var(--ink); display: flex; flex-direction: column; background: var(--bg-gradient); }
+.ms { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; display: inline-block; vertical-align: middle; line-height: 1; }
+
+/* Navigation */
+.nav { height: 60px; background: #fff; border-bottom: 1px solid var(--border-light); z-index: 100; display: flex; align-items: center; padding: 0 40px; justify-content: space-between;}
+.nav-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: 0.2s; text-decoration: none; border: 1px solid var(--border-light); }
+.nav-btn:hover { background: #f9fafb; color: var(--ink); }
+
+.btn-manual-sync { background: var(--ink); color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+.btn-manual-sync:hover { background: #374151; }
+
+.workspace { flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 32px 40px 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 32px; }
+.workspace::-webkit-scrollbar { display: none; }
+
+/* List View (Grouped by Project) */
+.proj-group { background: #fff; border-radius: 24px; padding: 32px; border: 1px solid var(--border-light); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.02); }
+.proj-header { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 900; border-bottom: 2px solid var(--ink); padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+.meet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.meet-card { background: #f9fafb; border: 1px solid var(--border-light); border-radius: 16px; padding: 20px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 8px; }
+.meet-card:hover { transform: translateY(-3px); box-shadow: 0 12px 20px -8px rgba(0,0,0,0.1); border-color: var(--ink-mute); background: #fff; }
+.m-date { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 800; color: var(--ink-mute); }
+.m-title { font-size: 15px; font-weight: 800; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-parts { font-size: 12px; font-weight: 600; color: var(--ink-soft); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Editor View (Page Transition) */
+.ed-panel { background: #fff; border-radius: 32px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); padding: 40px; display: flex; flex-direction: column; gap: 24px; border: 1px solid var(--border-light); }
+.inp-base { width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; font-size: 14px; font-weight: 700; outline: none; transition: 0.2s; }
+.inp-base:focus { background: #fff; border-color: var(--ink); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+.sec-label { font-size: 11px; font-weight: 900; color: var(--ink-mute); letter-spacing: 0.05em; margin-bottom: 8px; display: block; text-transform: uppercase;}
+
+/* Members Checkbox Grid */
+.mem-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.mem-chk { display: none; }
+.mem-lbl { padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; font-weight: 700; color: var(--ink-soft); cursor: pointer; transition: 0.2s; user-select: none; }
+.mem-chk:checked + .mem-lbl { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* Textareas */
+.textarea-base { width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; font-size: 14px; font-weight: 500; line-height: 1.6; outline: none; resize: vertical; min-height: 140px; transition: 0.2s; }
+.textarea-base:focus { background: #fff; border-color: var(--ink); }
+.act-area { border-left: 3px solid #0ea5e9; background: #f0f9ff; }
+.act-area:focus { background: #fff; border-color: #0ea5e9; }
+
+/* Abyssal Rise Modal (Transcript) */
+.overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.3); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.3s; }
+.overlay.active { opacity: 1; visibility: visible; }
+.modal-close-btn { position: absolute; top: 24px; right: 24px; width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; z-index: 10; }
+.modal-close-btn:hover { background: #fee2e2; color: #ef4444; }
+
+.abyssal-box { background: #fff; width: 95vw; max-width: 1200px; height: 90vh; border-radius: 32px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 40px 100px -10px rgba(0,0,0,0.3); position: relative; transform: translateY(160px) scale(0.85); filter: blur(24px); opacity: 0; transition: transform 0.6s cubic-bezier(0.2, 1.15, 0.3, 1), opacity 0.4s ease-out, filter 0.6s cubic-bezier(0.2, 1, 0.3, 1); }
+#transModal.active .abyssal-box { transform: translateY(0) scale(1); filter: blur(0); opacity: 1; }
+
+.trans-toolbar { background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 16px 32px; display: flex; gap: 12px; align-items: center; position: relative; }
+.tool-btn { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; color: var(--ink); display: flex; align-items: center; gap: 4px; }
+.tool-btn:hover { background: #f1f5f9; border-color: var(--ink-mute); }
+
+/* 찾아바꾸기 미니 팝업 */
+.fr-popup { position: absolute; top: 60px; left: 180px; background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; z-index: 100; display: none; width: 300px; }
+.fr-popup.active { display: block; }
+
+.trans-body { flex: 1; padding: 32px; overflow: hidden; display: flex; }
+.trans-textarea { flex: 1; width: 100%; border: none; outline: none; resize: none; font-size: 15px; font-weight: 500; line-height: 1.8; color: #333; }
+
+/* Buttons */
+.btn-primary { background: var(--ink); color: #fff; padding: 14px 32px; border-radius: 14px; font-size: 14px; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; box-shadow: 0 8px 16px -4px rgba(15, 23, 42, 0.2); }
+.btn-primary:hover { background: #374151; transform: translateY(-2px); }
+.btn-stt { background: #f1f5f9; color: var(--ink); border: 1px solid #e2e8f0; padding: 16px; border-radius: 16px; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+.btn-stt:hover { background: #e2e8f0; border-color: #cbd5e1; }
+
+#toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 12px 28px; border-radius: 99px; font-size: 13px; font-weight: 800; opacity: 0; transition: all 0.4s; z-index: 10000; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(10px); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="flex items-center gap-6">
+    <a href="index.html" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 홈으로</a>
+    <div class="font-['Space_Grotesk'] font-black text-[18px] tracking-tighter">MEETING <span class="text-sky-500">ARCHIVE</span></div>
+  </div>
+  <div class="flex items-center gap-4">
+    <div id="syncStatus" class="text-[12px] font-bold text-slate-400 flex items-center gap-2">
+      <div class="w-2 h-2 rounded-full bg-emerald-500" id="syncDot"></div> 시스템 준비 완료
+    </div>
+    <button class="btn-manual-sync" onclick="commitToCloud()">
+      <span class="ms text-[16px]">cloud_upload</span> DB 업로드
+    </button>
+  </div>
+</nav>
+
+<main class="workspace" id="viewList">
+  <div class="flex justify-end">
+    <button class="btn-primary !py-3 !px-5 !text-[13px] !rounded-xl flex items-center gap-2" onclick="openEditor(null)">
+      <span class="ms text-[18px]">add</span> 신규 회의 기록
+    </button>
+  </div>
+  <div id="listPool">
+    <div class="text-center text-slate-400 font-bold mt-20 opacity-60">데이터를 불러오는 중입니다...</div>
+  </div>
+</main>
+
+<main class="workspace" id="viewEditor" style="display: none;">
+  <div class="flex justify-between items-center mb-2">
+    <div class="flex items-center gap-4">
+      <button class="nav-btn !bg-white" onclick="closeEditor()"><span class="ms">arrow_back</span> 목록으로 돌아가기</button>
+      <h2 class="text-[24px] font-black tracking-tight text-slate-800">회의록 작성</h2>
+    </div>
+    <button class="text-rose-500 font-bold text-[13px] px-4 py-2 rounded-lg hover:bg-rose-50 transition" onclick="deleteMeeting()">이 회의록 삭제</button>
+  </div>
+
+  <div class="ed-panel">
+    <input type="hidden" id="edId">
+    <div class="flex gap-6">
+      <div class="w-[200px]">
+        <span class="sec-label">Date (일시)</span>
+        <input type="datetime-local" id="edDate" class="inp-base font-['Space_Grotesk']">
+      </div>
+      <div class="w-[180px]">
+        <span class="sec-label">Project (사업)</span>
+        <select id="edProj" class="inp-base cursor-pointer"></select>
+      </div>
+      <div class="flex-1">
+        <span class="sec-label">Title (회의 안건)</span>
+        <input type="text" id="edTitle" class="inp-base" placeholder="회의 주제를 입력하세요">
+      </div>
+    </div>
+
+    <div class="flex gap-6">
+      <div class="flex-1">
+        <span class="sec-label">내부 참석자 (Members)</span>
+        <div class="mem-grid" id="edMemGrid"></div>
+      </div>
+      <div class="w-[400px]">
+        <span class="sec-label">외부 참석자 (External)</span>
+        <input type="text" id="edExt" class="inp-base" placeholder="소속 및 성명을 입력하세요 (예: A사 홍길동)">
+      </div>
+    </div>
+
+    <div>
+      <span class="sec-label flex justify-between">Memo (자유 메모) 
+        <span class="font-medium text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">줄바꿈 보존</span>
+      </span>
+      <textarea id="edNote" class="textarea-base" placeholder="회의 중 논의된 사항을 자유롭게 기록하세요..."></textarea>
+    </div>
+
+    <div>
+      <span class="sec-label flex justify-between text-sky-600">Action Items (할 일)
+        <span class="font-medium text-[10px] text-sky-500 bg-sky-50 px-2 py-0.5 rounded">줄 단위로 입력 시 추후 Todos 연동 예정</span>
+      </span>
+      <textarea id="edActions" class="textarea-base act-area" placeholder="- PM팀장: 화면설계서 공유&#10;- 개발팀: API 스펙 확정"></textarea>
+    </div>
+
+    <div>
+      <button class="btn-stt w-full" onclick="openTranscript()">
+        <span class="ms text-rose-500 text-[20px]">graphic_eq</span> 클로바노트 회의 전문(STT) 열기 / 붙여넣기
+      </button>
+    </div>
+
+    <div class="flex justify-end mt-4 border-t border-slate-100 pt-8">
+      <button class="btn-primary" onclick="saveMeeting()">회의록 저장 및 동기화</button>
+    </div>
+  </div>
+</main>
+
+<div class="overlay" id="transModal">
+  <div class="abyssal-box">
+    <div class="modal-close-btn" onclick="closeTranscript()"><span class="ms text-[20px]">close</span></div>
+    
+    <div class="trans-toolbar">
+      <div class="font-black text-[15px] text-slate-800 mr-4">회의 전문 (Transcript)</div>
+      
+      <button class="tool-btn" onclick="toggleFindReplace()"><span class="ms">search</span> 찾아바꾸기</button>
+      
+      <div class="fr-popup" id="frPopup">
+        <div class="text-[11px] font-black text-slate-400 mb-3 uppercase tracking-widest">Find & Replace</div>
+        <div class="flex flex-col gap-3">
+          <input type="text" id="fndStr" class="inp-base !py-2 !text-[13px]" placeholder="찾을 단어">
+          <input type="text" id="repStr" class="inp-base !py-2 !text-[13px]" placeholder="바꿀 단어">
+          <div class="flex gap-2 mt-1">
+            <button class="btn-primary !py-2 !px-0 flex-1 !text-[12px]" onclick="replaceTrans(false)">바꾸기</button>
+            <button class="btn-primary !py-2 !px-0 flex-1 !text-[12px] !bg-sky-600 hover:!bg-sky-700" onclick="replaceTrans(true)">모두 바꾸기</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-1"></div>
+      <button class="btn-primary !py-2 !px-6 !text-[13px]" onclick="closeTranscript()">적용 후 닫기</button>
+    </div>
+
+    <div class="trans-body">
+      <textarea id="edTrans" class="trans-textarea" placeholder="클로바노트 등에서 변환된 회의 전문을 여기에 붙여넣으세요. 이 창을 닫고 [회의록 저장 및 동기화]를 누르면 저장됩니다."></textarea>
+    </div>
+  </div>
+</div>
+
+<form id="hidden_form" target="hidden_iframe" method="POST" style="display:none;"><input type="hidden" name="payload" id="payload_input"></form>
+<iframe name="hidden_iframe" style="display:none;" onload="if(window.isSaving) onSaveSuccess();"></iframe>
+
+<script>
+const S_ID = localStorage.getItem('CUSTOM_SHEET_ID') || (typeof CONFIG !== 'undefined' ? CONFIG.SHEET_ID : '16izs14p3VvDfojdBR2Q3Qwty6wHZiRqNbnQ8PxS9eOY');
+const A_URL = localStorage.getItem('CUSTOM_API_URL') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : 'https://script.google.com/macros/s/AKfycbz6QmihPORS0zp7Z9KPcHfAOVqGYlUVAl982rPZEW3sUcBtpe8OJDMxwrT67pA4ogO9/exec');
+
+let projects = [], members = [], meetings = [];
+
+window.onload = async () => {
+  try {
+    const [pRes, mRes, mtRes] = await Promise.all([
+      fetch(`https://docs.google.com/spreadsheets/d/${S_ID}/gviz/tq?tqx=out:csv&sheet=projects`),
+      fetch(`https://docs.google.com/spreadsheets/d/${S_ID}/gviz/tq?tqx=out:csv&sheet=members`),
+      fetch(`https://docs.google.com/spreadsheets/d/${S_ID}/gviz/tq?tqx=out:csv&sheet=meetings`)
+    ]);
+    projects = parseCSV(await pRes.text()) || [];
+    members = parseCSV(await mRes.text()) || [];
+    meetings = mtRes.ok ? (parseCSV(await mtRes.text()) || []) : [];
+    initUI();
+  } catch(e) { console.error(e); document.getElementById('listPool').innerHTML = '<div class="text-center text-rose-500 font-bold mt-20">데이터 로드 실패. API 연동을 확인하세요.</div>';}
+};
+
+function parseCSV(t){
+  const lines=t.trim().split('\n'); if(lines.length<2) return [];
+  const hdrs=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map(l=>{
+    const v=[]; let c='', q=false;
+    for(let i=0; i<l.length; i++){ const ch=l[i]; if(ch==='"') q=!q; else if(ch===','&&!q){v.push(c.trim());c='';} else c+=ch; }
+    v.push(c.trim()); const o={}; hdrs.forEach((h,i)=>o[h]=(v[i]||'').replace(/^"|"$/g,'')); return o;
+  });
+}
+
+function initUI() {
+  document.getElementById('edProj').innerHTML = '<option value="">사업 선택</option>' + projects.map(p=>`<option value="${p.short_name}">${p.short_name}</option>`).join('');
+  document.getElementById('edMemGrid').innerHTML = members.map((m, i) => `
+    <label>
+      <input type="checkbox" class="mem-chk" value="${m.name}" id="chkMem_${i}">
+      <div class="mem-lbl">${m.name}</div>
+    </label>
+  `).join('');
+  renderList();
+}
+
+/* --- List View Logic --- */
+function groupMeetings() {
+  const map = {};
+  meetings.forEach(m => {
+    const p = m.project_id || '기타';
+    if(!map[p]) map[p] = [];
+    map[p].push(m);
+  });
+  return Object.keys(map).sort((a,b) => {
+    const pA = projects.find(p=>p.short_name === a), pB = projects.find(p=>p.short_name === b);
+    return (pA ? Number(pA.order) : 999) - (pB ? Number(pB.order) : 999);
+  }).map(proj => {
+    map[proj].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    return { proj, items: map[proj] };
+  });
+}
+
+function renderList() {
+  const pool = document.getElementById('listPool');
+  if(!meetings.length) { pool.innerHTML = '<div class="text-center text-slate-400 font-bold mt-20 opacity-60">등록된 회의록이 없습니다.</div>'; return; }
+  
+  const grouped = groupMeetings();
+  let html = '';
+  grouped.forEach(g => {
+    html += `
+      <div class="proj-group">
+        <div class="proj-header">
+          <div class="text-slate-800">[${g.proj}]</div>
+          <div class="text-[12px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-3 py-1 rounded-full">${g.items.length} Meetings</div>
+        </div>
+        <div class="meet-grid">
+    `;
+    g.items.forEach(m => {
+      let dStr = (m.date||'').replace('T', ' ').slice(0, 16);
+      
+      let pDisplay = m.participants || '';
+      pDisplay = pDisplay.replace(/\[내부\]|\[외부\]/g, '').replace(/\|/g, ',').trim();
+      if(pDisplay.startsWith(',')) pDisplay = pDisplay.substring(1).trim();
+
+      html += `
+        <div class="meet-card" onclick="openEditor('${m.id}')">
+          <div class="m-date">${dStr}</div>
+          <div class="m-title">${m.title || '제목 없음'}</div>
+          <div class="m-parts">${pDisplay ? '참석: ' + pDisplay : '참석자 없음'}</div>
+        </div>
+      `;
+    });
+    html += `</div></div>`;
+  });
+  pool.innerHTML = html;
+}
+
+/* --- Editor Logic (Page View) --- */
+function openEditor(id) {
+  document.getElementById('viewList').style.display = 'none';
+  document.getElementById('viewEditor').style.display = 'flex';
+  
+  document.getElementById('edId').value = '';
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('edDate').value = now.toISOString().slice(0,16);
+  document.getElementById('edProj').value = '';
+  document.getElementById('edTitle').value = '';
+  document.getElementById('edExt').value = '';
+  document.getElementById('edNote').value = '';
+  document.getElementById('edActions').value = '';
+  document.getElementById('edTrans').value = '';
+  document.querySelectorAll('.mem-chk').forEach(cb => cb.checked = false);
+
+  if(id) {
+    const m = meetings.find(x => x.id === id);
+    document.getElementById('edId').value = m.id;
+    document.getElementById('edDate').value = m.date;
+    document.getElementById('edProj').value = m.project_id;
+    document.getElementById('edTitle').value = m.title;
+    document.getElementById('edNote').value = m.note || '';
+    document.getElementById('edActions').value = m.actions || '';
+    document.getElementById('edTrans').value = m.transcript || '';
+    
+    let pStr = m.participants || "";
+    let inMatch = pStr.match(/\[내부\](.*?)(?=\| \[외부\]|$)/);
+    let extMatch = pStr.match(/\[외부\](.*)/);
+    
+    if(inMatch && inMatch[1]) {
+      let inList = inMatch[1].split(',').map(s=>s.trim());
+      inList.forEach(pt => {
+        document.querySelectorAll('.mem-chk').forEach(cb => { if(cb.value === pt) cb.checked = true; });
+      });
+    }
+    if(extMatch && extMatch[1]) {
+      document.getElementById('edExt').value = extMatch[1].trim();
+    }
+  }
+}
+
+function closeEditor() { 
+  document.getElementById('viewEditor').style.display = 'none'; 
+  document.getElementById('viewList').style.display = 'flex';
+}
+
+function saveMeeting() {
+  const id = document.getElementById('edId').value || 'm_' + Date.now();
+  
+  let inList = [];
+  document.querySelectorAll('.mem-chk:checked').forEach(cb => inList.push(cb.value));
+  let ext = document.getElementById('edExt').value.trim();
+  let pStr = `[내부] ${inList.join(', ')} | [외부] ${ext}`;
+  
+  const mData = {
+    id: id,
+    date: document.getElementById('edDate').value,
+    project_id: document.getElementById('edProj').value,
+    title: document.getElementById('edTitle').value.trim(),
+    participants: pStr,
+    note: document.getElementById('edNote').value,
+    actions: document.getElementById('edActions').value,
+    transcript: document.getElementById('edTrans').value
+  };
+
+  if(!mData.title) { alert('회의 제목을 입력해주세요.'); return; }
+
+  const idx = meetings.findIndex(x => x.id === id);
+  if(idx > -1) meetings[idx] = mData;
+  else meetings.push(mData);
+
+  closeEditor(); 
+  renderList();
+  
+  // [수술 완료] 임시 저장 후 즉시 자동 업로드 트리거 작동
+  commitToCloud();
+}
+
+function deleteMeeting() {
+  const id = document.getElementById('edId').value;
+  if(!id) { closeEditor(); return; }
+  if(confirm("이 회의 기록을 완전히 삭제하시겠습니까? (전문 포함)")) {
+    meetings = meetings.filter(x => x.id !== id);
+    closeEditor(); 
+    renderList(); 
+    commitToCloud(); // 자동 삭제 동기화 유지
+  }
+}
+
+/* --- Abyssal Rise Transcript Logic --- */
+function openTranscript() { document.getElementById('transModal').classList.add('active'); }
+function closeTranscript() { document.getElementById('transModal').classList.remove('active'); document.getElementById('frPopup').classList.remove('active'); }
+
+function toggleFindReplace() {
+  document.getElementById('frPopup').classList.toggle('active');
+}
+
+function replaceTrans(all) {
+  const f = document.getElementById('fndStr').value;
+  const r = document.getElementById('repStr').value;
+  if(!f) return;
+  const ta = document.getElementById('edTrans');
+  if(all) {
+    ta.value = ta.value.split(f).join(r);
+    showToast(`모든 '${f}' 단어를 변경했습니다.`);
+  } else {
+    ta.value = ta.value.replace(f, r);
+    showToast(`단어를 변경했습니다.`);
+  }
+}
+
+/* --- Sync & Toast --- */
+function commitToCloud() {
+  if(window.isSaving) return;
+  const payload = { action: 'write', sheetName: 'meetings', data: meetings };
+  document.getElementById('payload_input').value = JSON.stringify(payload);
+  
+  window.isSaving = true;
+  document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-blue-500 animate-ping';
+  document.getElementById('syncStatus').innerHTML = `<div class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></div> 동기화 중...`;
+  
+  document.getElementById('hidden_form').action = A_URL;
+  document.getElementById('hidden_form').submit();
+}
+
+function onSaveSuccess() {
+  window.isSaving = false;
+  document.getElementById('syncDot').className = 'w-2 h-2 rounded-full bg-emerald-500';
+  document.getElementById('syncStatus').innerHTML = `<div class="w-2 h-2 rounded-full bg-emerald-500"></div> 시스템 준비 완료`;
+  showToast("모든 데이터가 DB에 완벽히 동기화되었습니다.");
+}
+
+function showToast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
