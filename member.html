@@ -31,6 +31,9 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; color: var(--ink); 
 
 /* Embed mode: nav 숨김 */
 body.embed .nav { display: none; }
+/* Embed 전용 표시 */
+.embed-only { display: none; }
+body.embed .embed-only { display: flex; }
 
 /* Main */
 .workspace { flex: 1; max-width: 1280px; margin: 0 auto; width: 100%; padding: 28px 40px 40px; display: flex; flex-direction: column; gap: 20px; min-height: 0; }
@@ -117,9 +120,14 @@ body.embed .workspace { padding-top: 24px; }
       <div class="page-title">조직관리</div>
       <div class="page-sub" id="memberCount">구성원 정보를 불러오는 중...</div>
     </div>
-    <button class="btn-add" onclick="openMemberEdit(-1)">
-      <span class="ms text-[18px]">person_add</span> 새 멤버 추가
-    </button>
+    <div class="flex items-center gap-3">
+      <button class="btn-save-manual embed-only" onclick="commitMembersToCloud()">
+        <span class="ms text-[18px]">cloud_upload</span> DB 업로드
+      </button>
+      <button class="btn-add" onclick="openMemberEdit(-1)">
+        <span class="ms text-[18px]">person_add</span> 새 멤버 추가
+      </button>
+    </div>
   </div>
 
   <div class="list-area" id="memberList">
