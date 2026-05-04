@@ -90,16 +90,18 @@ body::before {
 .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #e2e8f0; margin-right: 8px; }
 .sync-dot.syncing { background: #3b82f6; animation: pulse 1s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; display: inline-block; }
+
+/* Embed mode */
+body.embed .nav { display: none; }
+body.embed .workspace { padding-top: 20px; }
 </style>
 </head>
 <body>
 
 <nav class="nav">
   <a href="index.html" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 허브로 돌아가기</a>
-  <button class="btn-save-manual" id="saveBtn" onclick="forceManualSave()">
-    <span class="ms text-[18px]" id="syncIcon">cloud_upload</span>
-    <span id="syncText">DB 업로드</span>
-  </button>
 </nav>
 
 <main class="workspace">
@@ -117,6 +119,10 @@ body::before {
       <option value="문제발생">문제발생</option>
     </select>
     <button class="btn-add" onclick="addProject()" title="추가" tabindex="7"><span class="ms">add</span></button>
+    <button class="btn-save-manual" id="saveBtn" onclick="forceManualSave()" style="flex-shrink:0;">
+      <span class="ms text-[18px]" id="syncIcon">cloud_upload</span>
+      <span id="syncText">DB 업로드</span>
+    </button>
   </div>
 
   <div class="list-pool" id="listPool"></div>
@@ -179,8 +185,10 @@ body::before {
 
 <script>
 // [수술 3] config.js 연동
-const S_ID = typeof CONFIG !== 'undefined' ? CONFIG.SHEET_ID : '16izs14p3VvDfojdBR2Q3Qwty6wHZiRqNbnQ8PxS9eOY';
-const A_URL = typeof CONFIG !== 'undefined' ? CONFIG.API_URL : 'https://script.google.com/macros/s/AKfycbz6QmihPORS0zp7Z9KPcHfAOVqGYlUVAl982rPZEW3sUcBtpe8OJDMxwrT67pA4ogO9/exec';
+const S_ID  = (typeof CONFIG !== 'undefined' && CONFIG.SHEET_ID) ? CONFIG.SHEET_ID : '';
+const A_URL = (typeof CONFIG !== 'undefined' && CONFIG.API_URL)  ? CONFIG.API_URL  : '';
+const isEmbed = new URLSearchParams(location.search).has('embed');
+if(isEmbed) document.body.classList.add('embed');
 
 let projects = [];
 
