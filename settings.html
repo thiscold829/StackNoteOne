@@ -94,7 +94,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 허브로 돌아가기</a>
+  <a href="https://thiscold829.github.io/StackNoteOne/" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 허브로 돌아가기</a>
   <div class="flex items-center text-[12px] font-bold text-slate-500">
     <div class="sync-dot" id="syncDot"></div><span id="syncText">시스템 준비 완료</span>
   </div>
@@ -191,6 +191,16 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
     <div class="form-group">
       <label class="form-label">툴팁 설명 (Description)</label>
       <input type="text" id="edDesc" class="form-input" placeholder="마우스 오버 시 표시될 설명">
+    </div>
+
+    <!-- 코어 모듈 전용: 열기 방식 -->
+    <div class="form-group" id="edOpenModeGroup">
+      <label class="form-label">열기 방식 (Open Mode)</label>
+      <select id="edOpenMode" class="form-input cursor-pointer">
+        <option value="self">전환 (현재 탭)</option>
+        <option value="blank">새탭</option>
+        <option value="window">새창</option>
+      </select>
     </div>
 
     <div class="form-group mt-2 p-4 bg-slate-50 border border-slate-100 rounded-xl flex justify-between items-center">
@@ -332,21 +342,25 @@ function openModEdit(idx) {
     idx === -1
       ? (isCore ? 'New Core Module' : 'New Setting Module')
       : (isCore ? 'Edit Core Module' : 'Edit Setting Module');
+  // open_mode 필드는 코어 모듈에서만 표시
+  document.getElementById('edOpenModeGroup').style.display = isCore ? 'block' : 'none';
   const mods = isCore ? coreModules : settingModules;
   if(idx === -1) {
     ['edName','edIcon','edFile','edDesc'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('iconPreview').textContent = 'widgets';
     document.getElementById('edOrder').value = mods.length + 1;
     document.getElementById('edHidden').checked = false;
+    document.getElementById('edOpenMode').value = 'self';
   } else {
     const m = mods[idx];
-    document.getElementById('edName').value  = m.name     || '';
-    document.getElementById('edIcon').value  = m.icon     || '';
+    document.getElementById('edName').value  = m.name      || '';
+    document.getElementById('edIcon').value  = m.icon      || '';
     document.getElementById('iconPreview').textContent = m.icon || 'widgets';
-    document.getElementById('edFile').value  = m.filename || '';
-    document.getElementById('edDesc').value  = m.desc     || '';
-    document.getElementById('edOrder').value = m.order    || 0;
+    document.getElementById('edFile').value  = m.filename  || '';
+    document.getElementById('edDesc').value  = m.desc      || '';
+    document.getElementById('edOrder').value = m.order     || 0;
     document.getElementById('edHidden').checked = String(m.is_hidden).toUpperCase() === 'TRUE';
+    document.getElementById('edOpenMode').value = m.open_mode || 'self';
   }
   document.getElementById('modModal').classList.add('active');
 }
@@ -356,6 +370,7 @@ function closeModEdit() { document.getElementById('modModal').classList.remove('
 function saveMod() {
   const idx  = Number(document.getElementById('edIdx').value);
   const mods = activeSheet === 'core_modules' ? coreModules : settingModules;
+  const isCore = activeSheet === 'core_modules';
   const mData = {
     id:        idx === -1 ? 'mod_' + Date.now() : (mods[idx].id || ''),
     name:      document.getElementById('edName').value.trim(),
@@ -363,7 +378,8 @@ function saveMod() {
     filename:  document.getElementById('edFile').value.trim(),
     desc:      document.getElementById('edDesc').value.trim(),
     order:     Number(document.getElementById('edOrder').value) || 99,
-    is_hidden: document.getElementById('edHidden').checked ? 'TRUE' : 'FALSE'
+    is_hidden: document.getElementById('edHidden').checked ? 'TRUE' : 'FALSE',
+    ...(isCore && { open_mode: document.getElementById('edOpenMode').value || 'self' })
   };
   if(!mData.name || !mData.filename) { showToast('이름과 파일명은 필수입니다.'); return; }
   if(idx === -1) mods.push(mData); else mods[idx] = mData;
