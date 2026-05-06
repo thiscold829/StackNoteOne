@@ -75,7 +75,8 @@ body::before {
 .weather-card { display: flex; flex-direction: column; justify-content: center; align-items: center; }
 
 /* Main Stage & Dock */
-.main-stage { flex: 1; display: flex; align-items: flex-end; justify-content: center; position: relative; padding-bottom: 40px; }
+.main-stage { flex: 1; display: flex; align-items: flex-end; justify-content: center; position: relative; padding-bottom: 40px; transition: transform 0.35s cubic-bezier(0.2,1,0.3,1), opacity 0.3s ease; }
+.main-stage.dock-hidden { transform: translateY(130%); opacity: 0; pointer-events: none; }
 .dock-container {
   padding: 14px 16px; background: rgba(255,255,255,0.4); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%);
   border-radius: 32px; border: 1px solid rgba(255,255,255,0.8);
@@ -105,7 +106,12 @@ body::before {
 
 /* ── 공통: 태블릿+폰 독 항상 고정 플로팅 ─── */
 @media (max-width: 1024px) {
-  /* Dock: 맥OS처럼 항상 하단 고정 */
+  /* main: 스크롤 컨테이너 */
+  html, body { height: 100%; overflow: hidden; }
+  body { overflow-x: hidden; }
+  main.flex-1 { overflow-y: auto; overflow-x: hidden; padding-bottom: 110px; }
+
+  /* Dock: 항상 하단 고정 플로팅 */
   .main-stage {
     position: fixed;
     bottom: 20px;
@@ -127,35 +133,36 @@ body::before {
   /* Nav */
   .nav { padding: 0 24px; height: 56px; }
 
-  /* Glance: 3열 → 2열 (할일 + 우측 캘린더/날씨 스택) */
+  /* Glance: 2열 — 왼쪽: 할일 고정 / 오른쪽: 나머지 카드 자동 적재 */
   .glance-container {
     grid-template-columns: 1.4fr 1fr;
-    grid-template-rows: auto;
+    grid-auto-rows: auto;
     height: auto;
-    padding: 20px 24px 110px; /* 독 공간 확보 */
+    padding: 20px 24px;
     gap: 16px;
   }
 
-  /* 할일 풀: 왼쪽 열 전체 차지 */
-  .glance-container > .pool:first-child {
+  /* 할일 풀: 왼쪽 열 전체 스팬, 높이 뷰포트에 묶어 고정 */
+  .glance-container > *:first-child {
     grid-column: 1;
-    grid-row: 1 / 3;
-    max-height: none;
+    grid-row: 1 / 99;
+    max-height: calc(100vh - 160px);
+    overflow: hidden;
+  }
+  .todo-list {
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
   }
 
-  /* 캘린더: 오른쪽 위 */
-  .cal-stack {
-    grid-column: 2;
-    grid-row: 1;
-    flex-direction: column;
-    gap: 10px;
-    height: auto;
-  }
+  /* 나머지 카드: 오른쪽 열 자동 적재 (추가 카드 대응) */
+  .glance-container > *:not(:first-child) { grid-column: 2; }
+
+  /* 캘린더 */
+  .cal-stack { flex-direction: column; gap: 10px; height: auto; }
   .cal-card { padding: 14px; border-radius: 20px; }
   .cal-icon-wrap { width: 40px; height: 40px; margin-bottom: 8px; }
 
-  /* 날씨: 오른쪽 아래 */
-  .weather-card { grid-column: 2; grid-row: 2; }
+  /* 날씨 */
   .weather-card .ms { font-size: 40px !important; }
 
   /* 할일 카드 */
@@ -167,17 +174,81 @@ body::before {
   .dock-item .ms { font-size: 26px; }
 }
 
+/* ── 가로모드 + 낮은 화면 (폰 가로 / 작은 태블릿 가로) ── */
+@media (orientation: landscape) and (max-height: 520px) {
+  /* Nav 최소화 */
+  .nav { height: 46px; }
+
+  /* Glance: 2열 강제 (폰 가로도 동일) */
+  .glance-container {
+    display: grid !important;
+    grid-template-columns: 1.3fr 1fr;
+    grid-auto-rows: auto;
+    height: auto;
+    padding: 10px 16px;
+    gap: 10px;
+  }
+
+  /* 할일 풀: 높이 뷰포트에 철저히 묶음 */
+  .glance-container > *:first-child {
+    grid-column: 1;
+    grid-row: 1 / 99;
+    max-height: calc(100vh - 120px);
+    overflow: hidden;
+    padding: 12px;
+  }
+  .todo-list {
+    max-height: calc(100vh - 200px) !important;
+    overflow-y: auto !important;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .card { padding: 7px 10px; gap: 8px; }
+  .card-txt { font-size: 11px; }
+  .card-proj { font-size: 9px; }
+  .card-date { font-size: 9px; }
+
+  /* 나머지 카드: 오른쪽 열 */
+  .glance-container > *:not(:first-child) { grid-column: 2; }
+
+  /* 캘린더: 가로 배치로 공간 절약 */
+  .cal-stack {
+    flex-direction: row !important;
+    gap: 8px;
+    height: 72px;
+  }
+  .cal-card {
+    flex: 1; flex-direction: row !important;
+    justify-content: flex-start !important; align-items: center !important;
+    padding: 8px 10px; border-radius: 16px; gap: 8px;
+  }
+  .cal-icon-wrap { width: 30px; height: 30px; border-radius: 10px; margin-bottom: 0 !important; flex-shrink: 0; }
+  .cal-icon-wrap .ms { font-size: 16px !important; }
+  .cal-card .font-bold { font-size: 10px; }
+  .cal-card .text-\[10px\] { display: none; }
+
+  /* 날씨: 컴팩트 가로 바 */
+  .weather-card {
+    flex-direction: row !important;
+    justify-content: center !important; align-items: center !important;
+    gap: 10px; padding: 8px 12px; height: 56px;
+  }
+  .weather-card .ms { font-size: 26px !important; margin-bottom: 0 !important; }
+  .weather-card .text-\[36px\] { font-size: 18px !important; }
+  .weather-card .text-\[12px\] { display: none !important; }
+
+  /* Dock 더 작게 */
+  .main-stage { bottom: 10px; }
+  .dock-container { padding: 10px 12px; gap: 8px; border-radius: 22px; }
+  .dock-item { width: 44px; height: 44px; border-radius: 14px; }
+  .dock-item .ms { font-size: 20px; }
+}
+
 /* ── Phone (< 640px) ─────────────────────── */
 @media (max-width: 639px) {
-  html, body { height: 100%; overflow: hidden; }
-  body { overflow-x: hidden; overflow-y: auto; }
-
   /* Nav */
   .nav { height: 52px; padding: 0 16px !important; box-sizing: border-box; }
   .brand { font-size: 14px; }
-
-  /* Main: 스크롤 허용, 독 공간 확보 */
-  main.flex-1 { overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 110px; }
 
   /* Glance: 세로 단일 컬럼 */
   .glance-container {
@@ -304,6 +375,7 @@ const S_ID = typeof CONFIG !== 'undefined' ? CONFIG.SHEET_ID : '16izs14p3VvDfojd
 window.onload = () => {
   updateTime(); setInterval(updateTime, 1000);
   loadDashboardData();
+  initDockAutoHide();
 };
 
 function updateTime() {
@@ -391,6 +463,38 @@ function openModule(file, mode) {
 }
 
 function pingAndGo(file) { openModule(file, 'self'); }
+
+/* ── Dock 자동숨김 (스크롤 감지, 태블릿+폰) ── */
+function initDockAutoHide() {
+  if (window.innerWidth > 1024) return;
+  const mainEl = document.querySelector('main');
+  const stage  = document.querySelector('.main-stage');
+  if (!mainEl || !stage) return;
+
+  let lastY   = 0;
+  let ticking = false;
+
+  mainEl.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const currentY = mainEl.scrollTop;
+      if (currentY > lastY + 4 && currentY > 20) {
+        stage.classList.add('dock-hidden');    // 스크롤 다운 → 숨김
+      } else if (currentY < lastY - 4) {
+        stage.classList.remove('dock-hidden'); // 스크롤 업 → 표시
+      }
+      lastY   = currentY;
+      ticking = false;
+    });
+  }, { passive: true });
+}
+
+window.addEventListener('resize', () => {
+  const stage = document.querySelector('.main-stage');
+  if (!stage) return;
+  if (window.innerWidth > 1024) stage.classList.remove('dock-hidden');
+});
 </script>
 </body>
 </html>
