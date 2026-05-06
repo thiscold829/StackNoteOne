@@ -89,12 +89,98 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 
 #toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 12px 28px; border-radius: 99px; font-size: 13px; font-weight: 800; opacity: 0; transition: all 0.4s; z-index: 10000; box-shadow: 0 10px 24px rgba(0,0,0,0.15); white-space: nowrap; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(10px); }
+
+/* ══════════════════════════════════════════
+   Cross-Platform Responsive
+   PC     : > 1024px  → 기존 스타일 그대로
+   Tablet : 640–1024px
+   Phone  : < 640px
+   ══════════════════════════════════════════ */
+
+/* ── 드로어 공통 (폰 전용, 항상 DOM에 존재) ── */
+.drawer-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(15,23,42,0.35); backdrop-filter: blur(6px);
+  z-index: 490; transition: opacity 0.3s;
+}
+.drawer-backdrop.active { display: block; }
+.drawer-toggle { display: none; }
+
+/* ── Tablet (640px – 1024px) ─────────────── */
+@media (min-width: 640px) and (max-width: 1024px) {
+  .nav { padding: 0 24px; height: 56px; }
+  .workspace { grid-template-columns: 190px 1fr; padding: 20px 24px; gap: 20px; }
+  .content-inner { padding: 24px; }
+  .modal-box { width: 90vw; max-width: 480px; padding: 28px; }
+}
+
+/* ── Phone (< 640px) ─────────────────────── */
+@media (max-width: 639px) {
+  html, body { overflow: hidden; }
+
+  /* Nav */
+  .nav { height: 52px; padding: 0 14px; }
+
+  /* 햄버거 버튼 */
+  .drawer-toggle {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 10px; border: none;
+    background: transparent; cursor: pointer; color: var(--ink-soft);
+    transition: background 0.2s; flex-shrink: 0;
+  }
+  .drawer-toggle:hover { background: rgba(0,0,0,0.06); }
+
+  /* Workspace: 사이드바 열 제거, 콘텐츠 전체 너비 */
+  .workspace {
+    grid-template-columns: 1fr;
+    padding: 14px;
+    gap: 0;
+  }
+
+  /* Sidebar → 고정 드로어 */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 280px;
+    background: #fff;
+    z-index: 500;
+    padding: 64px 16px 24px;
+    transform: translateX(-100%);
+    transition: transform 0.32s cubic-bezier(0.2, 1, 0.3, 1);
+    box-shadow: 4px 0 32px rgba(15,23,42,0.12);
+    overflow-y: auto;
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  /* Content area 전체 너비 */
+  .content-area { border-radius: 20px; }
+  .content-inner { padding: 18px 16px; }
+
+  /* 모달 전체 너비 */
+  .modal-box {
+    width: calc(100vw - 24px);
+    max-width: 100%;
+    padding: 24px 18px;
+    border-radius: 24px;
+  }
+  /* 모달 내부 flex row → column */
+  .modal-box .flex.gap-4 { flex-direction: column; gap: 10px; }
+  .modal-box .flex.gap-4 .w-\[88px\] { width: 100%; }
+}
 </style>
 </head>
 <body>
 
+<!-- 드로어 백드롭 (폰 전용) -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+
 <nav class="nav">
-  <a href="https://thiscold829.github.io/StackNoteOne/" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 허브로 돌아가기</a>
+  <div class="flex items-center gap-2">
+    <button class="drawer-toggle" id="drawerToggle" onclick="openDrawer()" aria-label="메뉴">
+      <span class="ms text-[22px]">menu</span>
+    </button>
+    <a href="https://thiscold829.github.io/StackNoteOne/" class="nav-btn"><span class="ms text-[20px]">arrow_back</span> 허브로 돌아가기</a>
+  </div>
   <div class="flex items-center text-[12px] font-bold text-slate-500">
     <div class="sync-dot" id="syncDot"></div><span id="syncText">시스템 준비 완료</span>
   </div>
@@ -447,6 +533,30 @@ function showToast(m) {
   t.textContent = m; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
+
+/* ── 드로어 제어 (폰 전용) ── */
+function openDrawer() {
+  document.querySelector('.sidebar').classList.add('open');
+  document.getElementById('drawerBackdrop').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('drawerBackdrop').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// 메뉴 클릭 시 드로어 자동 닫힘 (폰에서만)
+const _origShowIframe = showModuleIframe;
+showModuleIframe = function(filename, name, menuEl) {
+  _origShowIframe(filename, name, menuEl);
+  if (window.innerWidth < 640) closeDrawer();
+};
+const _origShowMgmt = showModMgmt;
+showModMgmt = function(sheet, menuEl) {
+  _origShowMgmt(sheet, menuEl);
+  if (window.innerWidth < 640) closeDrawer();
+};
 </script>
 </body>
 </html>
