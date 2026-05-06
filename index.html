@@ -95,6 +95,60 @@ body::before {
   opacity: 0; pointer-events: none; transition: 0.2s; transform: translateY(4px);
 }
 .dock-item:hover .dock-label { opacity: 1; transform: translateY(0); }
+
+/* ── Mobile Responsive ─────────────────────────────── */
+@media (max-width: 768px) {
+  html, body { height: auto; overflow: auto; }
+
+  /* Nav */
+  .nav { height: 52px; padding: 0 16px !important; }
+  .brand { font-size: 15px; }
+
+  /* Glance: single column, height auto */
+  .glance-container {
+    grid-template-columns: 1fr;
+    height: auto;
+    padding: 16px;
+    gap: 14px;
+  }
+
+  /* Hide calendar & weather on mobile */
+  .cal-stack, .weather-card { display: none !important; }
+
+  /* Pool height cap */
+  .pool { max-height: 260px; }
+
+  /* Dock: horizontally scrollable */
+  .main-stage {
+    align-items: center;
+    padding: 16px;
+    justify-content: flex-start;
+  }
+  .dock-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 14px;
+    border-radius: 24px;
+    gap: 12px;
+    width: calc(100vw - 32px);
+    scrollbar-width: none;
+    justify-content: flex-start;
+  }
+  .dock-container::-webkit-scrollbar { display: none; }
+
+  /* Dock items: slightly smaller */
+  .dock-item {
+    width: 52px;
+    height: 52px;
+    border-radius: 18px;
+    flex-shrink: 0;
+  }
+  .dock-item .ms { font-size: 24px; }
+
+  /* Disable dock hover lift on touch */
+  .dock-item:hover { transform: none; box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
+  .dock-item:hover .dock-label { opacity: 0; }
+}
 </style>
 </head>
 <body>
